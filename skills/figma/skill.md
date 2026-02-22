@@ -479,7 +479,7 @@ Files response:
 As of May 2025, webhooks attach to a **team**, **file**, or **project** (not just team).
 
 ```python
-import requests, hashlib, hmac
+import requests
 
 def register_webhook(
     token: str,
