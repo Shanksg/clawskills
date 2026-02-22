@@ -507,7 +507,7 @@ def register_webhook(
 
 **Validate incoming webhook signature:**
 ```python
-import hashlib, hmac
+import hmac
 from flask import Flask, request, abort
 
 app = Flask(__name__)
