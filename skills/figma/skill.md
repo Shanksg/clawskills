@@ -637,7 +637,7 @@ create_dev_resource(
 ### Recipe 10 — Full asset pipeline (webhook → export → upload)
 
 ```python
-import requests, boto3, hashlib, hmac
+import requests, boto3, hmac
 from flask import Flask, request, abort
 
 app = Flask(__name__)
