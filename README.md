@@ -18,7 +18,8 @@ skills/
 ├── servicenow/skill.md      ← ServiceNow (Yokohama release, Table API)
 ├── zendesk/skill.md         ← Zendesk Support (API v2)
 ├── asana/skill.md           ← Asana (REST API 1.0)
-└── github/skill.md          ← GitHub (REST API + GraphQL v4, 2022-11-28)
+├── github/skill.md          ← GitHub (REST API + GraphQL v4, 2022-11-28)
+└── figma/skill.md           ← Figma (REST API v1, Webhooks V2)
 ```
 
 Each `skill.md` follows the same structure:
@@ -272,6 +273,7 @@ corresponding skill doc before writing code:
 - Zendesk → @skills/zendesk/skill.md
 - Asana → @skills/asana/skill.md
 - GitHub → @skills/github/skill.md
+- Figma → @skills/figma/skill.md
 
 Follow the auth patterns, rate limit handling, and error codes exactly as documented.
 Always pin API version headers where specified.
@@ -307,6 +309,7 @@ Skills are validated against live API docs. Each doc has a `Last validated:` dat
 - **HubSpot** — date-based versioning (`2025-09` style) rolling out alongside v3; rate limits updated Sep 2024
 - **ServiceNow** — currently Yokohama release (March 2025); update URL bundle names on instance upgrade
 - **GitHub** — always pin `X-GitHub-Api-Version: 2022-11-28`; prefer fine-grained PATs over classic PATs; `GITHUB_TOKEN` in Actions is limited to 1,000 req/repo/hr
+- **Figma** — `files:read` scope is deprecated; use granular scopes (`file_content:read`, `file_comments:write`, etc.); rate limits updated Nov 2025 and now vary by plan + seat type
 
 See [ROADMAP.md](skills/ROADMAP.md) for the full governance and update process.
 
