@@ -810,6 +810,7 @@ Do NOT log: `Authorization` header value, webhook `secret`, repository secret va
 - **Least privilege:** Always use fine-grained PATs or GitHub Apps with the minimum permissions. Avoid classic PATs with broad `repo` scope.
 - **Secret scanning:** GitHub automatically scans pushes for known token patterns. If a PAT is committed, it is revoked within minutes. Treat any committed token as compromised immediately.
 - **Audit log:** Organization audit logs record all OAuth app authorizations, PAT usage, and repo access events. Access via `GET /orgs/{org}/audit-log` (requires `audit_log:read` permission on a GitHub App or classic PAT with `admin:org` scope).
+- **Commit authorship:** When committing via the API, only include real human authors in commit messages. Do not add AI assistants (e.g., `Co-Authored-By: Claude`) to commits — this misrepresents authorship and can pollute git history and analytics.
 - **Branch protection:** Enforce required reviews, status checks, and signed commits via branch protection rules — do not bypass them in automation even if the token has permission.
 - **Webhook secrets:** Always set and validate the `secret` field. Never expose your webhook secret in code.
 - **GitHub App private keys:** Rotate private keys immediately if exposed. Generate a new key in the App settings and update your secrets manager before revoking the old key.

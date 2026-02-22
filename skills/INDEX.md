@@ -19,6 +19,7 @@ A curated library of integration skill documents for the most common SaaS platfo
 | Zendesk | [zendesk/skill.md](./zendesk/skill.md) | Support Ops | Customer support ticketing with rich webhook + export APIs |
 | Asana | [asana/skill.md](./asana/skill.md) | Project Manager, RevOps | Task and project management with portfolio tracking |
 | GitHub | [github/skill.md](./github/skill.md) | Engineering, DevOps | Source control, PRs, CI/CD automation via REST + GraphQL |
+| Figma | [figma/skill.md](./figma/skill.md) | Design, Product, DevOps | Design file inspection, asset export, webhooks, design-to-dev handoff |
 
 ---
 
@@ -136,6 +137,20 @@ A curated library of integration skill documents for the most common SaaS platfo
 
 ---
 
+### Figma → [skill.md](./figma/skill.md)
+1. Read a file's full node tree (document, pages, frames, components)
+2. Fetch specific nodes by ID (avoid downloading the full file)
+3. Export nodes as PNG/SVG/PDF via the Images API
+4. List and post comments on a file
+5. List all published components in a team with pagination
+6. Extract design tokens (styles + variables) from a file
+7. List team projects and files
+8. Register a webhook (FILE_VERSION_UPDATE, FILE_COMMENT, DEV_MODE_STATUS_UPDATE, etc.)
+9. Get file version history and fetch a file at a specific version
+10. Create dev resources (Storybook/GitHub links) attached to nodes for handoff
+
+---
+
 ### GitHub → [skill.md](./github/skill.md)
 1. Create a branch and open a pull request programmatically
 2. Search issues and pull requests with the Search API
@@ -165,6 +180,8 @@ These scenarios span multiple skill docs — reference both tools:
 | New customer → support org | Salesforce | Zendesk | Sync Account → Organization, Contact → User |
 | Jira issue merged → PR linked | Jira | GitHub | Post commit status / Check Run on Jira transition |
 | Bug report → GitHub issue + PR | Zendesk / ServiceNow | GitHub | Auto-create issue, label, assign; link ticket ID in body |
+| Design ready → engineering task | Figma | Jira / Asana / GitHub | `DEV_MODE_STATUS_UPDATE` webhook → create/update issue with frame link |
+| Asset pipeline | Figma | S3 / CDN | `FILE_VERSION_UPDATE` webhook → export frames as PNG, upload to storage |
 
 ---
 
@@ -181,6 +198,7 @@ These scenarios span multiple skill docs — reference both tools:
 | Zendesk | API Token + Basic Auth | Base64(email/token:token) | Role-based (agent, admin) |
 | Asana | Personal Access Token (PAT) | Bearer token | Inherits user permissions |
 | GitHub | Fine-grained PAT or GitHub App installation token | Bearer token | Per-resource permissions (contents, issues, pull_requests, etc.) |
+| Figma | Personal Access Token (PAT) or OAuth 2.0 | `X-Figma-Token` (PAT) / `Authorization: Bearer` (OAuth) | Granular scopes: `file_content:read`, `webhooks:write`, etc. |
 
 ---
 
@@ -197,10 +215,11 @@ These scenarios span multiple skill docs — reference both tools:
 | Zendesk | Enterprise: 700/min · Professional: 400/min · Team/Essential: 200/min | 1 minute | `Retry-After` on 429 |
 | Asana | 1,500 req/min + 150 concurrent | 1 minute | `Retry-After` on 429 |
 | GitHub | PAT: 5,000/hr · GitHub App: 5k–12.5k/hr · Enterprise Cloud: 15,000/hr · Secondary: 900 pts/min, 80 create/min | 1 hour (primary) + sliding (secondary) | `x-ratelimit-remaining` / `x-ratelimit-reset`; 403 or 429 |
+| Figma | Starter: 10/min (T1), 25/min (T2) · Professional: 15/min (T1), 50/min (T2) · Org: 20/min (T1), 100/min (T2) | Per minute (leaky bucket) | `Retry-After` / `X-Figma-Rate-Limit-Type` / `X-Figma-Plan-Tier` |
 
 ---
 
-*Last updated: 2026-02-22 (GitHub skill added; all docs verified current) | See [ROADMAP.md](./ROADMAP.md) for versioning and governance details.*
+*Last updated: 2026-02-22 (GitHub + Figma skills added; all docs verified current) | See [ROADMAP.md](./ROADMAP.md) for versioning and governance details.*
 
 ### API version reference (as of 2026-02-22)
 
@@ -215,3 +234,4 @@ These scenarios span multiple skill docs — reference both tools:
 | Zendesk | Support API v2 | Implicit/password OAuth deprecated Feb 2025 |
 | Asana | REST API 1.0 | No breaking changes; always use `opt_fields` |
 | GitHub | REST API + GraphQL v4 | Pin `X-GitHub-Api-Version: 2022-11-28`; fine-grained PATs recommended |
+| Figma | REST API v1 / Webhooks V2 | Path-based versioning (`/v1/`, `/v2/`); `files:read` scope deprecated — use granular scopes |
