@@ -18,6 +18,7 @@ A curated library of integration skill documents for the most common SaaS platfo
 | ServiceNow | [servicenow/skill.md](./servicenow/skill.md) | Support Ops, IT Ops | ITSM platform; incident/change/CMDB management |
 | Zendesk | [zendesk/skill.md](./zendesk/skill.md) | Support Ops | Customer support ticketing with rich webhook + export APIs |
 | Asana | [asana/skill.md](./asana/skill.md) | Project Manager, RevOps | Task and project management with portfolio tracking |
+| GitHub | [github/skill.md](./github/skill.md) | Engineering, DevOps | Source control, PRs, CI/CD automation via REST + GraphQL |
 
 ---
 
@@ -135,6 +136,20 @@ A curated library of integration skill documents for the most common SaaS platfo
 
 ---
 
+### GitHub → [skill.md](./github/skill.md)
+1. Create a branch and open a pull request programmatically
+2. Search issues and pull requests with the Search API
+3. Update issue labels, assignees, and milestone
+4. Post a comment on an issue or pull request
+5. Create or update a file in a repository (base64 + SHA pattern)
+6. Register a webhook and validate HMAC-SHA256 signatures
+7. Trigger a workflow dispatch event and poll for the run result
+8. Post a commit status or create a Check Run for CI integration
+9. Create a release with auto-generated release notes
+10. Rotate a repository secret using PyNaCl sealed-box encryption
+
+---
+
 ## Common Cross-Tool Patterns
 
 These scenarios span multiple skill docs — reference both tools:
@@ -148,6 +163,8 @@ These scenarios span multiple skill docs — reference both tools:
 | Delivery handoff → project board | Salesforce / Dynamics 365 | Monday.com / Jira | Trigger on Opportunity Closed Won |
 | Incident escalation → ops board | ServiceNow | Monday.com | Priority P1/P2 → high-visibility board item |
 | New customer → support org | Salesforce | Zendesk | Sync Account → Organization, Contact → User |
+| Jira issue merged → PR linked | Jira | GitHub | Post commit status / Check Run on Jira transition |
+| Bug report → GitHub issue + PR | Zendesk / ServiceNow | GitHub | Auto-create issue, label, assign; link ticket ID in body |
 
 ---
 
@@ -163,6 +180,7 @@ These scenarios span multiple skill docs — reference both tools:
 | ServiceNow | OAuth 2.0 Client Credentials | Bearer token | Role-based (itil, admin, etc.) |
 | Zendesk | API Token + Basic Auth | Base64(email/token:token) | Role-based (agent, admin) |
 | Asana | Personal Access Token (PAT) | Bearer token | Inherits user permissions |
+| GitHub | Fine-grained PAT or GitHub App installation token | Bearer token | Per-resource permissions (contents, issues, pull_requests, etc.) |
 
 ---
 
@@ -178,12 +196,13 @@ These scenarios span multiple skill docs — reference both tools:
 | ServiceNow | ~3,000 req/hr default (Yokohama, configurable by admin) | 1 hour | `Retry-After` on 429 |
 | Zendesk | Enterprise: 700/min · Professional: 400/min · Team/Essential: 200/min | 1 minute | `Retry-After` on 429 |
 | Asana | 1,500 req/min + 150 concurrent | 1 minute | `Retry-After` on 429 |
+| GitHub | PAT: 5,000/hr · GitHub App: 5k–12.5k/hr · Enterprise Cloud: 15,000/hr · Secondary: 900 pts/min, 80 create/min | 1 hour (primary) + sliding (secondary) | `x-ratelimit-remaining` / `x-ratelimit-reset`; 403 or 429 |
 
 ---
 
-*Last updated: 2026-02-19 (skill docs updated with verified current API data) | See [ROADMAP.md](./ROADMAP.md) for versioning and governance details.*
+*Last updated: 2026-02-22 (GitHub skill added; all docs verified current) | See [ROADMAP.md](./ROADMAP.md) for versioning and governance details.*
 
-### API version reference (as of 2026-02-19)
+### API version reference (as of 2026-02-22)
 
 | Tool | Current version | Notes |
 |------|----------------|-------|
@@ -195,3 +214,4 @@ These scenarios span multiple skill docs — reference both tools:
 | ServiceNow | Yokohama (March 2025) | Previous: Xanadu |
 | Zendesk | Support API v2 | Implicit/password OAuth deprecated Feb 2025 |
 | Asana | REST API 1.0 | No breaking changes; always use `opt_fields` |
+| GitHub | REST API + GraphQL v4 | Pin `X-GitHub-Api-Version: 2022-11-28`; fine-grained PATs recommended |
