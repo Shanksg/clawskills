@@ -489,16 +489,24 @@ def register_webhook(
     context: str = "FILE",     # "TEAM" | "FILE" | "PROJECT"
     context_id: str = "",      # team_id, file_key, or project_id
 ) -> dict:
+    payload = {
+        "event_type": event_type,
+        "endpoint": endpoint,
+        "passcode": passcode,
+        "status": "ACTIVE",
+        "description": f"Auto-registered {event_type}",
+    }
+
+    if context == "TEAM":
+        payload["team_id"] = context_id
+    elif context == "FILE":
+        payload["file_key"] = context_id
+    elif context == "PROJECT":
+        payload["project_id"] = context_id
+
     r = requests.post(
         "https://api.figma.com/v2/webhooks",
-        json={
-            "event_type": event_type,
-            "team_id": context_id if context == "TEAM" else None,
-            "endpoint": endpoint,
-            "passcode": passcode,
-            "status": "ACTIVE",
-            "description": f"Auto-registered {event_type}",
-        },
+        json=payload,
         headers={"X-Figma-Token": token, "Content-Type": "application/json"},
     )
     r.raise_for_status()
