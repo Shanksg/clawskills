@@ -75,11 +75,13 @@ Returns matching excerpts (±3 lines of context) grouped by skill, capped at 5 m
 
 ## Configuration
 
+Skills are bundled inside the npm package — no `SKILLS_DIR` configuration needed for the standard `npx` setup.
+
+`SKILLS_DIR` is available if you want to point the server at a custom or local skills directory (e.g. your own forks of the docs):
+
 | Env var | Default | Description |
 |---------|---------|-------------|
-| `SKILLS_DIR` | `../skills` (relative to the package) | Absolute path to a directory of `{slug}/skill.md` files |
-
-To use a custom skills directory:
+| `SKILLS_DIR` | bundled `skills/` inside the package | Absolute path to a directory of `{slug}/skill.md` files |
 
 ```json
 {
