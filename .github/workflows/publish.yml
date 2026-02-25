@@ -17,7 +17,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          registry-url: https://registry.npmjs.org
       - run: npm ci
         working-directory: mcp-server
       - run: npm run build
@@ -29,5 +28,4 @@ jobs:
         working-directory: mcp-server
       - run: npm publish --access public --provenance
         working-directory: mcp-server
-        # No NODE_AUTH_TOKEN needed — OIDC exchanges a GitHub token for a
-        # short-lived npm publish token automatically.
+        # No NODE_AUTH_TOKEN needed — OIDC trusted publishing handles auth.
