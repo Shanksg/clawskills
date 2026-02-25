@@ -19,7 +19,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 function resolveSkillsDir(): string {
   if (process.env.SKILLS_DIR) return process.env.SKILLS_DIR;
   // From dist/index.js → ../../skills  (or src/index.ts → ../../skills)
-  return path.resolve(__dirname, "../../skills");
+  return path.resolve(__dirname, "../skills");
 }
 
 function loadSkills(skillsDir: string): Map<string, string> {
