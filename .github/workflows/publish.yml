@@ -20,6 +20,8 @@ jobs:
           registry-url: https://registry.npmjs.org
       - name: Upgrade npm (OIDC trusted publishing requires npm 11.5.1+)
         run: npm install -g npm@latest
+        env:
+          NPM_CONFIG_USERCONFIG: /dev/null
       - run: npm ci
         working-directory: mcp-server
       - run: npm run build
