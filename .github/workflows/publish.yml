@@ -1,0 +1,33 @@
+name: Publish to npm
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: read
+  id-token: write  # Required for OIDC trusted publishing
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org
+      - run: npm ci
+        working-directory: mcp-server
+      - run: npm run build
+        working-directory: mcp-server
+      - run: npm test
+        working-directory: mcp-server
+      - name: Set version from tag
+        run: npm version ${GITHUB_REF_NAME} --no-git-tag-version
+        working-directory: mcp-server
+      - run: npm publish --access public --provenance
+        working-directory: mcp-server
+        # No NODE_AUTH_TOKEN needed — OIDC exchanges a GitHub token for a
+        # short-lived npm publish token automatically.

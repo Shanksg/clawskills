@@ -168,6 +168,12 @@ function skillSummary(content: string): string {
 }
 
 // ---------------------------------------------------------------------------
+// Exports for testing
+// ---------------------------------------------------------------------------
+
+export { loadSkills, extractSection, findSkill, searchSkills, skillSummary };
+
+// ---------------------------------------------------------------------------
 // MCP Server setup
 // ---------------------------------------------------------------------------
 
@@ -304,7 +310,9 @@ async function main() {
   process.stderr.write("[clawskills-mcp] Server running on stdio\n");
 }
 
-main().catch((err) => {
-  process.stderr.write(`[clawskills-mcp] Fatal: ${err}\n`);
-  process.exit(1);
-});
+if (process.env.NODE_ENV !== "test") {
+  main().catch((err) => {
+    process.stderr.write(`[clawskills-mcp] Fatal: ${err}\n`);
+    process.exit(1);
+  });
+}
