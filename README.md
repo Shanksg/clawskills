@@ -30,11 +30,45 @@ Each `skill.md` follows the same structure:
 - **Authentication & permissions** — auth flows with working `curl` examples, least-privilege scopes
 - **Common workflows (recipes)** — 6–12 step-by-step recipes with request/response examples
 - **Query patterns & filtering** — pagination, incremental sync, dedup
-- **Rate limits, retries, idempotency** — verified limits, backoff code in Python
-- **Error handling** — "if you see X, do Y" playbook
+- **Reliability: rate limits, retries, idempotency** — verified limits, backoff code in Python
+- **Error handling & troubleshooting** — "if you see X, do Y" playbook
 - **Security & compliance** — PII, audit trails, token guidance
 - **Testing checklist** — QA checklist you can run against a sandbox
 - **Sources** — official doc links
+
+---
+
+## Use with Claude via MCP (recommended)
+
+ClawSkills ships as an MCP server that exposes all skill docs as tools directly inside Claude.
+
+```bash
+npx clawskills-mcp
+```
+
+Or install permanently:
+
+```bash
+npm install -g clawskills-mcp
+```
+
+Add to your Claude Desktop / Claude Code config:
+
+```json
+{
+  "mcpServers": {
+    "clawskills": {
+      "command": "npx",
+      "args": ["clawskills-mcp"]
+    }
+  }
+}
+```
+
+Once connected, Claude can call three tools:
+- **`list_skills`** — see all available skill docs
+- **`get_skill`** — fetch a full skill or a specific section (`auth`, `rate-limits`, `recipes`, `errors`, etc.)
+- **`search_skills`** — full-text search across all skills
 
 ---
 
@@ -207,7 +241,7 @@ print(response)
 
 ---
 
-### As MCP context for Claude Code agents
+### Injecting skill docs into Claude API calls
 
 If you're building a custom agent using the Claude API with tool use, you can inject relevant skill docs based on which tool the agent is about to call:
 
@@ -255,7 +289,7 @@ result = run_integration_agent(
 
 ---
 
-### In a `.clauide/CLAUDE.md` project instruction file
+### In a `.claude/CLAUDE.md` project instruction file
 
 If you work in Claude Code regularly, you can tell Claude to always use these docs:
 
@@ -321,8 +355,12 @@ See [ROADMAP.md](skills/ROADMAP.md) for the full governance and update process.
 
 To add or update a skill:
 
-1. Follow the template structure in any existing `skill.md`.
-2. Verify all endpoints, rate limits, and auth flows against the official vendor docs before committing.
-3. Add a `Last validated:` date to the doc header.
-4. Update `skills/INDEX.md` if adding a new tool.
-5. Link to official sources in the `## Sources` section — no unverified claims.
+1. Create a branch: `git checkout -b skill/<toolname>`
+2. Follow the template structure in any existing `skill.md` — all 11 sections required.
+3. Verify all endpoints, rate limits, and auth flows against the official vendor docs before committing.
+4. Add a `Last validated:` date to the doc header.
+5. Update `skills/INDEX.md` and `README.md` when adding a new tool.
+6. Link to official sources in the `## Sources` section — no unverified claims.
+7. Open a PR — CI runs `npm test` which validates that your skill loads and has all required sections.
+
+**Releases** are automated: merge to `main`, then go to GitHub Actions → **Release** → Run workflow → pick `patch / minor / major`.
