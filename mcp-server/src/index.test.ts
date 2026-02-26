@@ -2,7 +2,11 @@ import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
+import { fileURLToPath } from "url";
 import { loadSkills, extractSection, findSkill, searchSkills, skillSummary } from "./index.js";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const REAL_SKILLS_DIR = path.resolve(__dirname, "../../skills");
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -200,5 +204,59 @@ describe("skillSummary", () => {
   it("returns empty string for all-header content", () => {
     const summary = skillSummary("# Title\n## Subtitle\n");
     expect(summary).toBe("");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Real skills validation
+// Each skill added to the repo must pass these checks.
+// ---------------------------------------------------------------------------
+
+const REQUIRED_SECTIONS = [
+  "Authentication & permissions",
+  "Reliability: rate limits, retries, idempotency",
+  "Error handling & troubleshooting",
+  "Common workflows (recipes)",
+];
+
+const KNOWN_SKILLS = [
+  "asana", "dynamics365", "figma", "github", "hubspot",
+  "jira", "monday", "salesforce", "servicenow", "zendesk",
+  "slack",
+];
+
+describe("real skills", () => {
+  let skills: Map<string, string>;
+
+  beforeAll(() => {
+    skills = loadSkills(REAL_SKILLS_DIR);
+  });
+
+  it("loads all expected skills", () => {
+    for (const slug of KNOWN_SKILLS) {
+      expect(skills.has(slug), `Missing skill: ${slug}`).toBe(true);
+    }
+  });
+
+  it("every skill has a non-empty summary line", () => {
+    for (const [slug, content] of skills.entries()) {
+      const summary = skillSummary(content);
+      expect(summary, `${slug}: empty summary`).not.toBe("");
+    }
+  });
+
+  it("every skill contains the required sections", () => {
+    for (const [slug, content] of skills.entries()) {
+      for (const section of REQUIRED_SECTIONS) {
+        const extracted = extractSection(content, section);
+        expect(extracted, `${slug}: missing section "${section}"`).not.toBeNull();
+      }
+    }
+  });
+
+  it("every skill file is at least 5KB", () => {
+    for (const [slug, content] of skills.entries()) {
+      expect(content.length, `${slug}: suspiciously short skill file`).toBeGreaterThan(5000);
+    }
   });
 });

@@ -735,7 +735,7 @@ if current_version != cached_version:
 
 ---
 
-## Rate limits, retries, idempotency
+## Reliability: rate limits, retries, idempotency
 
 ### Tier definitions (as of Nov 17, 2025)
 
@@ -794,7 +794,7 @@ def figma_request(url: str, token: str, params: dict = None, max_retries: int = 
 
 ---
 
-## Error handling
+## Error handling & troubleshooting
 
 | Code | When | Action |
 |------|------|--------|
