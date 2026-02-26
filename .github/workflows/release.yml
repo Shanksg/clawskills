@@ -14,7 +14,8 @@ on:
           - major
 
 permissions:
-  contents: write
+  contents: write   # push version commit + tag
+  id-token: write   # OIDC npm publish
 
 jobs:
   release:
@@ -22,13 +23,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          # Use a token with push access (GITHUB_TOKEN works for public repos;
-          # for protected branches you may need a PAT with contents:write)
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      - name: Upgrade npm (OIDC trusted publishing requires npm 11.5.1+)
+        run: npm install -g npm@latest
+        env:
+          NPM_CONFIG_USERCONFIG: /dev/null
 
       - name: Bump version in package.json
         run: npm version ${{ inputs.bump }} --no-git-tag-version
@@ -48,4 +53,16 @@ jobs:
           git tag v${{ steps.version.outputs.value }}
           git push origin main
           git push origin v${{ steps.version.outputs.value }}
-        # ↑ Pushing the tag triggers publish.yml automatically
+
+      - name: Build
+        run: npm ci && npm run build
+        working-directory: mcp-server
+
+      - name: Test
+        run: npm test
+        working-directory: mcp-server
+
+      - name: Publish to npm
+        run: npm publish --access public
+        working-directory: mcp-server
+        # No NODE_AUTH_TOKEN — OIDC handles auth automatically
