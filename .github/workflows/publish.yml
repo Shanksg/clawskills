@@ -28,9 +28,6 @@ jobs:
         working-directory: mcp-server
       - run: npm test
         working-directory: mcp-server
-      - name: Set version from tag
-        run: npm version ${GITHUB_REF_NAME} --no-git-tag-version
-        working-directory: mcp-server
       - run: npm publish --access public
         working-directory: mcp-server
         # No NODE_AUTH_TOKEN — npm 11.5.1+ handles OIDC auth automatically.
