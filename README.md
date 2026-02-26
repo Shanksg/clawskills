@@ -19,7 +19,8 @@ skills/
 ├── zendesk/skill.md         ← Zendesk Support (API v2)
 ├── asana/skill.md           ← Asana (REST API 1.0)
 ├── github/skill.md          ← GitHub (REST API + GraphQL v4, 2022-11-28)
-└── figma/skill.md           ← Figma (REST API v1, Webhooks V2)
+├── figma/skill.md           ← Figma (REST API v1, Webhooks V2)
+└── slack/skill.md           ← Slack (Web API, Block Kit, Events API)
 ```
 
 Each `skill.md` follows the same structure:
@@ -274,6 +275,7 @@ corresponding skill doc before writing code:
 - Asana → @skills/asana/skill.md
 - GitHub → @skills/github/skill.md
 - Figma → @skills/figma/skill.md
+- Slack → @skills/slack/skill.md
 
 Follow the auth patterns, rate limit handling, and error codes exactly as documented.
 Always pin API version headers where specified.

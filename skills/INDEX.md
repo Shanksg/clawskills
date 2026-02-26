@@ -20,6 +20,7 @@ A curated library of integration skill documents for the most common SaaS platfo
 | Asana | [asana/skill.md](./asana/skill.md) | Project Manager, RevOps | Task and project management with portfolio tracking |
 | GitHub | [github/skill.md](./github/skill.md) | Engineering, DevOps | Source control, PRs, CI/CD automation via REST + GraphQL |
 | Figma | [figma/skill.md](./figma/skill.md) | Design, Product, DevOps | Design file inspection, asset export, webhooks, design-to-dev handoff |
+| Slack | [slack/skill.md](./slack/skill.md) | All teams | Real-time messaging, notifications, event-driven automation via Web API |
 
 ---
 
@@ -165,6 +166,20 @@ A curated library of integration skill documents for the most common SaaS platfo
 
 ---
 
+### Slack → [skill.md](./slack/skill.md)
+1. Post a rich Block Kit message to a channel
+2. Reply in a thread using `thread_ts`
+3. Send a direct message (open DM channel + postMessage)
+4. Look up a user by email address
+5. Update a message in place as status changes
+6. Upload a file using the two-step external upload API
+7. Add a reaction to a message
+8. List all channels and build a name → ID cache
+9. Read channel history incrementally using cursor pagination
+10. Receive, verify, and process Events API payloads
+
+---
+
 ## Common Cross-Tool Patterns
 
 These scenarios span multiple skill docs — reference both tools:
@@ -199,6 +214,7 @@ These scenarios span multiple skill docs — reference both tools:
 | Asana | Personal Access Token (PAT) | Bearer token | Inherits user permissions |
 | GitHub | Fine-grained PAT or GitHub App installation token | Bearer token | Per-resource permissions (contents, issues, pull_requests, etc.) |
 | Figma | Personal Access Token (PAT) or OAuth 2.0 | `X-Figma-Token` (PAT) / `Authorization: Bearer` (OAuth) | Granular scopes: `file_content:read`, `webhooks:write`, etc. |
+| Slack | Bot token (OAuth 2.0 app install) | `xoxb-...` Bearer token | Per-method scopes: `chat:write`, `channels:read`, `users:read`, etc. |
 
 ---
 
@@ -216,10 +232,11 @@ These scenarios span multiple skill docs — reference both tools:
 | Asana | 1,500 req/min + 150 concurrent | 1 minute | `Retry-After` on 429 |
 | GitHub | PAT: 5,000/hr · GitHub App: 5k–12.5k/hr · Enterprise Cloud: 15,000/hr · Secondary: 900 pts/min, 80 create/min | 1 hour (primary) + sliding (secondary) | `x-ratelimit-remaining` / `x-ratelimit-reset`; 403 or 429 |
 | Figma | Starter: 10/min (T1), 25/min (T2) · Professional: 15/min (T1), 50/min (T2) · Org: 20/min (T1), 100/min (T2) | Per minute (leaky bucket) | `Retry-After` / `X-Figma-Rate-Limit-Type` / `X-Figma-Plan-Tier` |
+| Slack | Tier 1: 1/min · Tier 2: 20/min · Tier 3: 50/min · Tier 4: 100/min · `chat.postMessage`: 1/sec/channel sub-limit | Per method per workspace | HTTP 429 + `Retry-After` header (seconds) |
 
 ---
 
-*Last updated: 2026-02-22 (GitHub + Figma skills added; all docs verified current) | See [ROADMAP.md](./ROADMAP.md) for versioning and governance details.*
+*Last updated: 2026-02-26 (Slack skill added) | See [ROADMAP.md](./ROADMAP.md) for versioning and governance details.*
 
 ### API version reference (as of 2026-02-22)
 
@@ -235,3 +252,4 @@ These scenarios span multiple skill docs — reference both tools:
 | Asana | REST API 1.0 | No breaking changes; always use `opt_fields` |
 | GitHub | REST API + GraphQL v4 | Pin `X-GitHub-Api-Version: 2022-11-28`; fine-grained PATs recommended |
 | Figma | REST API v1 / Webhooks V2 | Path-based versioning (`/v1/`, `/v2/`); `files:read` scope deprecated — use granular scopes |
+| Slack | Web API (no versioned path) | Always check `ok` field (HTTP 200 even on errors); `files.upload` deprecated — use `files.getUploadURLExternal` |
