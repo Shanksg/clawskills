@@ -21,6 +21,7 @@ A curated library of integration skill documents for the most common SaaS platfo
 | GitHub | [github/skill.md](./github/skill.md) | Engineering, DevOps | Source control, PRs, CI/CD automation via REST + GraphQL |
 | Figma | [figma/skill.md](./figma/skill.md) | Design, Product, DevOps | Design file inspection, asset export, webhooks, design-to-dev handoff |
 | Slack | [slack/skill.md](./slack/skill.md) | All teams | Real-time messaging, notifications, event-driven automation via Web API |
+| Stripe | [stripe/skill.md](./stripe/skill.md) | Engineering, Finance, RevOps | Payments, subscriptions, refunds, webhooks, and Connect for platforms |
 
 ---
 
@@ -180,6 +181,20 @@ A curated library of integration skill documents for the most common SaaS platfo
 
 ---
 
+### Stripe → [skill.md](./stripe/skill.md)
+1. Create a PaymentIntent for a one-time charge and confirm with Stripe.js
+2. Save a card for future off-session charges (SetupIntent → attach PaymentMethod)
+3. Create a recurring subscription (Customer + Price + Subscription)
+4. Launch a hosted Checkout Session and fulfil on `checkout.session.completed`
+5. Issue a full or partial refund
+6. Handle a failed subscription payment: notify customer, update payment method, retry invoice
+7. Receive and verify webhooks (Stripe-Signature HMAC-SHA256 verification)
+8. Stripe Connect: create a connected account, generate onboarding link, destination charge
+9. List all charges for a customer with cursor pagination
+10. Cancel a subscription at period end
+
+---
+
 ## Common Cross-Tool Patterns
 
 These scenarios span multiple skill docs — reference both tools:
@@ -197,6 +212,9 @@ These scenarios span multiple skill docs — reference both tools:
 | Bug report → GitHub issue + PR | Zendesk / ServiceNow | GitHub | Auto-create issue, label, assign; link ticket ID in body |
 | Design ready → engineering task | Figma | Jira / Asana / GitHub | `DEV_MODE_STATUS_UPDATE` webhook → create/update issue with frame link |
 | Asset pipeline | Figma | S3 / CDN | `FILE_VERSION_UPDATE` webhook → export frames as PNG, upload to storage |
+| Payment succeeded → CRM deal closed | Stripe | Salesforce / HubSpot | `payment_intent.succeeded` webhook → update deal stage to Closed Won |
+| Subscription cancelled → support ticket | Stripe | Zendesk / Jira | `customer.subscription.deleted` → create ticket for churn review |
+| Invoice paid → project provisioned | Stripe | Asana / Monday.com | `invoice.paid` webhook → create onboarding project or board item |
 
 ---
 
@@ -215,6 +233,7 @@ These scenarios span multiple skill docs — reference both tools:
 | GitHub | Fine-grained PAT or GitHub App installation token | Bearer token | Per-resource permissions (contents, issues, pull_requests, etc.) |
 | Figma | Personal Access Token (PAT) or OAuth 2.0 | `X-Figma-Token` (PAT) / `Authorization: Bearer` (OAuth) | Granular scopes: `file_content:read`, `webhooks:write`, etc. |
 | Slack | Bot token (OAuth 2.0 app install) | `xoxb-...` Bearer token | Per-method scopes: `chat:write`, `channels:read`, `users:read`, etc. |
+| Stripe | Secret API key or Restricted key | `Authorization: Bearer sk_live_...` | Per-resource scopes on restricted keys (None / Read / Write) |
 
 ---
 
@@ -233,10 +252,11 @@ These scenarios span multiple skill docs — reference both tools:
 | GitHub | PAT: 5,000/hr · GitHub App: 5k–12.5k/hr · Enterprise Cloud: 15,000/hr · Secondary: 900 pts/min, 80 create/min | 1 hour (primary) + sliding (secondary) | `x-ratelimit-remaining` / `x-ratelimit-reset`; 403 or 429 |
 | Figma | Starter: 10/min (T1), 25/min (T2) · Professional: 15/min (T1), 50/min (T2) · Org: 20/min (T1), 100/min (T2) | Per minute (leaky bucket) | `Retry-After` / `X-Figma-Rate-Limit-Type` / `X-Figma-Plan-Tier` |
 | Slack | Tier 1: 1/min · Tier 2: 20/min · Tier 3: 50/min · Tier 4: 100/min · `chat.postMessage`: 1/sec/channel sub-limit | Per method per workspace | HTTP 429 + `Retry-After` header (seconds) |
+| Stripe | Live: **100 req/sec** · Sandbox: **25 req/sec** · Search: 20/sec | Per account | HTTP 429 + `Stripe-Rate-Limited-Reason` header |
 
 ---
 
-*Last updated: 2026-02-26 (Slack skill added) | See [ROADMAP.md](./ROADMAP.md) for versioning and governance details.*
+*Last updated: 2026-03-01 (Stripe skill added) | See [ROADMAP.md](./ROADMAP.md) for versioning and governance details.*
 
 ### API version reference (as of 2026-02-22)
 
@@ -253,3 +273,4 @@ These scenarios span multiple skill docs — reference both tools:
 | GitHub | REST API + GraphQL v4 | Pin `X-GitHub-Api-Version: 2022-11-28`; fine-grained PATs recommended |
 | Figma | REST API v1 / Webhooks V2 | Path-based versioning (`/v1/`, `/v2/`); `files:read` scope deprecated — use granular scopes |
 | Slack | Web API (no versioned path) | Always check `ok` field (HTTP 200 even on errors); `files.upload` deprecated — use `files.getUploadURLExternal` |
+| Stripe | `2026-02-25.clover` | Pin with `Stripe-Version` header; amounts in smallest currency unit (cents); never log raw card data |
