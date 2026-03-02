@@ -22,6 +22,7 @@ A curated library of integration skill documents for the most common SaaS platfo
 | Figma | [figma/skill.md](./figma/skill.md) | Design, Product, DevOps | Design file inspection, asset export, webhooks, design-to-dev handoff |
 | Slack | [slack/skill.md](./slack/skill.md) | All teams | Real-time messaging, notifications, event-driven automation via Web API |
 | Stripe | [stripe/skill.md](./stripe/skill.md) | Engineering, Finance, RevOps | Payments, subscriptions, refunds, webhooks, and Connect for platforms |
+| Notion | [notion/skill.md](./notion/skill.md) | Product, Engineering, Ops | Docs, databases, and blocks API for knowledge base and project automation |
 
 ---
 
@@ -181,6 +182,20 @@ A curated library of integration skill documents for the most common SaaS platfo
 
 ---
 
+### Notion → [skill.md](./notion/skill.md)
+1. Create a database row (page with properties: title, select, date, people)
+2. Query a database with AND/OR filters and sorts, paginating all results
+3. Update page properties (select, date, checkbox, rich_text)
+4. Archive (trash) a page
+5. Create a page with rich content blocks (headings, callout, to-do, code)
+6. Append blocks to an existing page in batches of 100
+7. Read all blocks from a page recursively (handling has_children)
+8. Search for pages and databases by title
+9. Incremental sync — query pages modified since a given timestamp
+10. Upsert pattern — create-or-update using an external ID property
+
+---
+
 ### Stripe → [skill.md](./stripe/skill.md)
 1. Create a PaymentIntent for a one-time charge and confirm with Stripe.js
 2. Save a card for future off-session charges (SetupIntent → attach PaymentMethod)
@@ -213,6 +228,9 @@ These scenarios span multiple skill docs — reference both tools:
 | Design ready → engineering task | Figma | Jira / Asana / GitHub | `DEV_MODE_STATUS_UPDATE` webhook → create/update issue with frame link |
 | Asset pipeline | Figma | S3 / CDN | `FILE_VERSION_UPDATE` webhook → export frames as PNG, upload to storage |
 | Payment succeeded → CRM deal closed | Stripe | Salesforce / HubSpot | `payment_intent.succeeded` webhook → update deal stage to Closed Won |
+| Deal closed → Notion project page | Salesforce / HubSpot | Notion | Closed Won trigger → create onboarding project row in Notion database |
+| GitHub release → Notion changelog | GitHub | Notion | `release` event → append block to changelog database page |
+| Alert fired → Notion runbook page | PagerDuty / any webhook | Notion | Incident fires → create structured runbook page with checklist blocks |
 | Subscription cancelled → support ticket | Stripe | Zendesk / Jira | `customer.subscription.deleted` → create ticket for churn review |
 | Invoice paid → project provisioned | Stripe | Asana / Monday.com | `invoice.paid` webhook → create onboarding project or board item |
 
@@ -234,6 +252,7 @@ These scenarios span multiple skill docs — reference both tools:
 | Figma | Personal Access Token (PAT) or OAuth 2.0 | `X-Figma-Token` (PAT) / `Authorization: Bearer` (OAuth) | Granular scopes: `file_content:read`, `webhooks:write`, etc. |
 | Slack | Bot token (OAuth 2.0 app install) | `xoxb-...` Bearer token | Per-method scopes: `chat:write`, `channels:read`, `users:read`, etc. |
 | Stripe | Secret API key or Restricted key | `Authorization: Bearer sk_live_...` | Per-resource scopes on restricted keys (None / Read / Write) |
+| Notion | Internal Integration Secret or OAuth token | `Authorization: Bearer secret_...` | Per-capability: Read/Insert/Update content, Read users |
 
 ---
 
@@ -253,10 +272,11 @@ These scenarios span multiple skill docs — reference both tools:
 | Figma | Starter: 10/min (T1), 25/min (T2) · Professional: 15/min (T1), 50/min (T2) · Org: 20/min (T1), 100/min (T2) | Per minute (leaky bucket) | `Retry-After` / `X-Figma-Rate-Limit-Type` / `X-Figma-Plan-Tier` |
 | Slack | Tier 1: 1/min · Tier 2: 20/min · Tier 3: 50/min · Tier 4: 100/min · `chat.postMessage`: 1/sec/channel sub-limit | Per method per workspace | HTTP 429 + `Retry-After` header (seconds) |
 | Stripe | Live: **100 req/sec** · Sandbox: **25 req/sec** · Search: 20/sec | Per account | HTTP 429 + `Stripe-Rate-Limited-Reason` header |
+| Notion | **3 req/sec average** (burst allowed) | Per workspace | HTTP 429 + `Retry-After` header (seconds) |
 
 ---
 
-*Last updated: 2026-03-01 (Stripe skill added) | See [ROADMAP.md](./ROADMAP.md) for versioning and governance details.*
+*Last updated: 2026-03-02 (Notion skill added) | See [ROADMAP.md](./ROADMAP.md) for versioning and governance details.*
 
 ### API version reference (as of 2026-02-22)
 
@@ -274,3 +294,4 @@ These scenarios span multiple skill docs — reference both tools:
 | Figma | REST API v1 / Webhooks V2 | Path-based versioning (`/v1/`, `/v2/`); `files:read` scope deprecated — use granular scopes |
 | Slack | Web API (no versioned path) | Always check `ok` field (HTTP 200 even on errors); `files.upload` deprecated — use `files.getUploadURLExternal` |
 | Stripe | `2026-02-25.clover` | Pin with `Stripe-Version` header; amounts in smallest currency unit (cents); never log raw card data |
+| Notion | `2025-09-03` | `Notion-Version` header required on every request; share pages with integration before API access works |
