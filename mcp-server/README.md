@@ -2,7 +2,7 @@
 
 An MCP (Model Context Protocol) server that exposes [ClawSkills](https://github.com/Shanksg/clawskills) API integration skill docs to AI agents.
 
-ClawSkills contains structured Markdown guides for 10+ SaaS APIs (Salesforce, HubSpot, GitHub, Jira, etc.) covering auth, rate limits, pagination, error handling, and recipes — everything an agent needs to make reliable API calls.
+ClawSkills contains structured Markdown guides for 13 SaaS APIs (Salesforce, HubSpot, GitHub, Jira, Stripe, Notion, Slack, and more) covering auth, rate limits, pagination, error handling, and recipes — everything an agent needs to make reliable API calls.
 
 ---
 
@@ -101,16 +101,19 @@ Skills are bundled inside the npm package — no `SKILLS_DIR` configuration need
 
 ## Available skills
 
-- `asana` — Asana API
+- `asana` — Asana REST API
 - `dynamics365` — Microsoft Dynamics 365
-- `figma` — Figma API
-- `github` — GitHub REST API
+- `figma` — Figma REST API
+- `github` — GitHub REST API + GraphQL
 - `hubspot` — HubSpot CRM API
 - `jira` — Jira Cloud REST API
-- `monday` — Monday.com API
+- `monday` — Monday.com GraphQL API
+- `notion` — Notion REST API (Pages, Databases, Blocks)
 - `salesforce` — Salesforce REST API
-- `servicenow` — ServiceNow REST API
-- `zendesk` — Zendesk REST API
+- `servicenow` — ServiceNow Table API
+- `slack` — Slack Web API + Events API
+- `stripe` — Stripe Payments API (Billing, Connect)
+- `zendesk` — Zendesk Support API
 
 ---
 
