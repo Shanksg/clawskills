@@ -222,7 +222,7 @@ const REQUIRED_SECTIONS = [
 const KNOWN_SKILLS = [
   "asana", "dynamics365", "figma", "github", "hubspot",
   "jira", "monday", "salesforce", "servicenow", "zendesk",
-  "slack", "stripe", "notion",
+  "slack", "stripe", "notion", "linear",
 ];
 
 describe("real skills", () => {

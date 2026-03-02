@@ -22,7 +22,8 @@ skills/
 ├── figma/skill.md           ← Figma (REST API v1, Webhooks V2)
 ├── slack/skill.md           ← Slack (Web API, Block Kit, Events API)
 ├── stripe/skill.md          ← Stripe (Payments API v2026-02-25, Billing, Connect)
-└── notion/skill.md          ← Notion (REST API v2025-09-03, Pages, Databases, Blocks)
+├── notion/skill.md          ← Notion (REST API v2025-09-03, Pages, Databases, Blocks)
+└── linear/skill.md          ← Linear (GraphQL API, Issues, Cycles, Webhooks)
 ```
 
 Each `skill.md` follows the same structure:
@@ -314,6 +315,7 @@ corresponding skill doc before writing code:
 - Slack → @skills/slack/skill.md
 - Stripe → @skills/stripe/skill.md
 - Notion → @skills/notion/skill.md
+- Linear → @skills/linear/skill.md
 
 Follow the auth patterns, rate limit handling, and error codes exactly as documented.
 Always pin API version headers where specified.
