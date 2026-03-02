@@ -23,6 +23,7 @@ A curated library of integration skill documents for the most common SaaS platfo
 | Slack | [slack/skill.md](./slack/skill.md) | All teams | Real-time messaging, notifications, event-driven automation via Web API |
 | Stripe | [stripe/skill.md](./stripe/skill.md) | Engineering, Finance, RevOps | Payments, subscriptions, refunds, webhooks, and Connect for platforms |
 | Notion | [notion/skill.md](./notion/skill.md) | Product, Engineering, Ops | Docs, databases, and blocks API for knowledge base and project automation |
+| Linear | [linear/skill.md](./linear/skill.md) | Engineering, DevOps | Issue tracking, sprints, and webhooks via GraphQL API |
 
 ---
 
@@ -182,6 +183,20 @@ A curated library of integration skill documents for the most common SaaS platfo
 
 ---
 
+### Linear → [skill.md](./linear/skill.md)
+1. Create an issue with title, description, priority, state, assignee, and labels
+2. Update an issue (state, priority, assignee) using UUID or shorthand ID (ENG-123)
+3. Query issues with AND/OR filters (state type, priority, assignee, label) and pagination
+4. Get all workflow states for a team (cache before creating issues)
+5. Post a comment on an issue
+6. Create an attachment linking an external resource (GitHub PR, Sentry error, Zendesk ticket)
+7. Incremental sync — query issues updated since a timestamp using relative duration filters
+8. Register a webhook via `webhookCreate` mutation
+9. Verify webhook signature (HMAC-SHA256 `Linear-Signature` header) and dispatch events
+10. Add an issue to a cycle (sprint); query active/upcoming cycles
+
+---
+
 ### Notion → [skill.md](./notion/skill.md)
 1. Create a database row (page with properties: title, select, date, people)
 2. Query a database with AND/OR filters and sorts, paginating all results
@@ -231,6 +246,9 @@ These scenarios span multiple skill docs — reference both tools:
 | Deal closed → Notion project page | Salesforce / HubSpot | Notion | Closed Won trigger → create onboarding project row in Notion database |
 | GitHub release → Notion changelog | GitHub | Notion | `release` event → append block to changelog database page |
 | Alert fired → Notion runbook page | PagerDuty / any webhook | Notion | Incident fires → create structured runbook page with checklist blocks |
+| GitHub PR merged → Linear issue done | GitHub | Linear | PR `merged` event → `issueUpdate` state to Completed |
+| Sentry error → Linear bug | Sentry | Linear | New issue alert → `issueCreate` with error title, stack trace, priority |
+| Linear issue done → Zendesk ticket resolved | Linear | Zendesk | Webhook `state.type=completed` → update ticket status |
 | Subscription cancelled → support ticket | Stripe | Zendesk / Jira | `customer.subscription.deleted` → create ticket for churn review |
 | Invoice paid → project provisioned | Stripe | Asana / Monday.com | `invoice.paid` webhook → create onboarding project or board item |
 
@@ -253,6 +271,7 @@ These scenarios span multiple skill docs — reference both tools:
 | Slack | Bot token (OAuth 2.0 app install) | `xoxb-...` Bearer token | Per-method scopes: `chat:write`, `channels:read`, `users:read`, etc. |
 | Stripe | Secret API key or Restricted key | `Authorization: Bearer sk_live_...` | Per-resource scopes on restricted keys (None / Read / Write) |
 | Notion | Internal Integration Secret or OAuth token | `Authorization: Bearer secret_...` | Per-capability: Read/Insert/Update content, Read users |
+| Linear | Personal API key or OAuth 2.0 | API key: `Authorization: <KEY>` (no Bearer) · OAuth: `Authorization: Bearer <TOKEN>` | `read`, `write`, `issues:create`, `comments:create`, `admin` |
 
 ---
 
@@ -273,10 +292,11 @@ These scenarios span multiple skill docs — reference both tools:
 | Slack | Tier 1: 1/min · Tier 2: 20/min · Tier 3: 50/min · Tier 4: 100/min · `chat.postMessage`: 1/sec/channel sub-limit | Per method per workspace | HTTP 429 + `Retry-After` header (seconds) |
 | Stripe | Live: **100 req/sec** · Sandbox: **25 req/sec** · Search: 20/sec | Per account | HTTP 429 + `Stripe-Rate-Limited-Reason` header |
 | Notion | **3 req/sec average** (burst allowed) | Per workspace | HTTP 429 + `Retry-After` header (seconds) |
+| Linear | API key: **5,000 req/hr** + 250k complexity pts/hr · OAuth: 5,000 req/hr + 2M pts/hr | Per user | HTTP 400 + `RATELIMITED` error code · `X-RateLimit-*` headers |
 
 ---
 
-*Last updated: 2026-03-02 (Notion skill added) | See [ROADMAP.md](./ROADMAP.md) for versioning and governance details.*
+*Last updated: 2026-03-02 (Linear skill added) | See [ROADMAP.md](./ROADMAP.md) for versioning and governance details.*
 
 ### API version reference (as of 2026-02-22)
 
@@ -295,3 +315,4 @@ These scenarios span multiple skill docs — reference both tools:
 | Slack | Web API (no versioned path) | Always check `ok` field (HTTP 200 even on errors); `files.upload` deprecated — use `files.getUploadURLExternal` |
 | Stripe | `2026-02-25.clover` | Pin with `Stripe-Version` header; amounts in smallest currency unit (cents); never log raw card data |
 | Notion | `2025-09-03` | `Notion-Version` header required on every request; share pages with integration before API access works |
+| Linear | GraphQL (no versioned path) | Single endpoint `https://api.linear.app/graphql`; OAuth apps created after Oct 2025 require refresh token rotation; priority: 0=None 1=Urgent 2=High 3=Medium 4=Low |
