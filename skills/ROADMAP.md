@@ -12,26 +12,26 @@ This skill set enables end-to-end automation and integration across the most com
 
 ---
 
-## Current state (as of 2026-03-01)
+## Current state (as of 2026-03-10)
 
 ### What's shipped
 
 | Layer | Status |
 |-------|--------|
-| **11 skill docs** — Monday.com, Salesforce, Jira, Dynamics 365, HubSpot, ServiceNow, Zendesk, Asana, GitHub, Figma, Slack | ✅ Live |
-| **MCP server** — `clawskills-mcp` v0.2.3 on npm; `list_skills`, `get_skill`, `search_skills` | ✅ Live |
+| **14 skill docs** — Monday.com, Salesforce, Jira, Dynamics 365, HubSpot, ServiceNow, Zendesk, Asana, GitHub, Figma, Slack, Stripe, Notion, Linear | ✅ Live |
+| **MCP server** — `clawskills-mcp` v0.3.4 on npm; `list_skills`, `get_skill`, `search_skills` | ✅ Live |
 | **CI pipeline** — build + test on every push/PR via `ci.yml` | ✅ Live |
 | **Release automation** — `release.yml` workflow_dispatch → bump, tag, npm publish via OIDC | ✅ Live |
-| **Test suite** — Vitest unit tests + real-skills validation (required sections, ≥5 KB, all 11 tools) | ✅ Live |
+| **Test suite** — Vitest unit tests + real-skills validation (required sections, ≥5 KB, all 14 tools) | ✅ Live |
 | **Public repo readiness** — MIT license, `.gitignore`, full `package.json` metadata | ✅ Ready |
 
 ### Content coverage by original phase
 
 | Phase | Theme | Status |
 |-------|-------|--------|
-| Phase 1 — Foundation (Auth + Core CRUD) | Auth flows, basic CRUD, retry patterns | ✅ Complete — all 11 tools |
-| Phase 2 — High-Frequency Workflows | 6–12 recipes per tool | ✅ Complete — all 11 tools |
-| Phase 3 — Event-Driven & Real-Time | Webhook setup, signature verification, event handling | ✅ Complete — all 11 tools |
+| Phase 1 — Foundation (Auth + Core CRUD) | Auth flows, basic CRUD, retry patterns | ✅ Complete — all 14 tools |
+| Phase 2 — High-Frequency Workflows | 6–12 recipes per tool | ✅ Complete — all 14 tools |
+| Phase 3 — Event-Driven & Real-Time | Webhook setup, signature verification, event handling | ✅ Complete — all 14 tools |
 | Phase 4 — Bulk & Advanced Operations | Batch APIs, large-volume patterns | ⚠️ Partial — documented for most tools; not all have >500-record examples |
 | Phase 5 — Cross-Tool Orchestration | Multi-system recipes spanning 2+ tools | ❌ Not started — patterns listed in INDEX.md but no dedicated recipes |
 
@@ -39,31 +39,9 @@ This skill set enables end-to-end automation and integration across the most com
 
 ## Next development phase
 
-### Priority 1 — Content expansion: 3 new skills
+### Priority 1 — Freshness and accuracy pipeline
 
-Each new skill follows the 11-section template, lives on a `skill/<name>` branch, and is validated by CI before merge.
-
-| Skill | Why | Key areas to cover |
-|-------|-----|--------------------|
-| **Stripe** | Most common payments API; revenue-critical workflows missing from current library | Webhooks (event types + signature), Checkout Sessions, subscriptions, refunds, idempotency keys, Connect (multi-account) |
-| **Notion** | Knowledge base + lightweight PM; high demand for doc/wiki automation | Pages API, Databases + filters + sorts, Blocks API (rich text), Search, cursor pagination |
-| **Linear** | Fast-growing engineering tool, increasingly replacing Jira at startups | Issues, Projects, Teams, Cycles, GraphQL API, webhooks, OAuth + PAT auth |
-
-**Order:** Stripe → Notion → Linear (payments coverage is the biggest gap).
-
-**Acceptance criteria for each:**
-- [ ] All 11 required sections present (CI enforces)
-- [ ] `Last validated:` date in header
-- [ ] Auth section has working `curl` example tested against sandbox/dev environment
-- [ ] At least 8 recipes with request/response examples
-- [ ] Rate limits verified against official docs
-- [ ] INDEX.md and README.md updated
-
----
-
-### Priority 2 — Freshness CI pipeline (the moat)
-
-A weekly automated check that skill docs aren't stale and that key API patterns still work.
+Now that the core 14-skill library exists, the next moat is keeping it accurate as vendor APIs change.
 
 **Phase A — Staleness detection (low-effort, high-value):**
 - Parse `Last validated:` date from each `skill.md` header
@@ -71,7 +49,7 @@ A weekly automated check that skill docs aren't stale and that key API patterns 
 - Open a GitHub issue automatically when a doc exceeds the threshold
 - Deliverable: `.github/workflows/freshness.yml` (weekly cron, `0 9 * * 1`) + `scripts/check-freshness.ts`
 
-**Phase B — Live smoke tests (medium-effort, highest-value — the real moat):**
+**Phase B — Live smoke tests (medium-effort, highest-value):**
 - For each tool, maintain a minimal test that hits: auth endpoint + one read
 - Run weekly against sandbox environments using stored credentials (GitHub Secrets)
 - Failure creates a doc-review issue with the tool name and failing assertion
@@ -84,12 +62,28 @@ A weekly automated check that skill docs aren't stale and that key API patterns 
 
 ---
 
+### Priority 2 — Packaging and distribution hygiene
+
+The repo now needs tighter alignment between the canonical `skills/` directory, the bundled npm package contents, and the docs that describe them.
+
+- Eliminate stale bundled skill copies during local development
+- Ensure the MCP server reports the package version rather than a hardcoded value
+- Add a CI check that the packaged `mcp-server/skills` tree matches root `skills/`
+- Add a CI/doc check that skill counts and package versions referenced in README/ROADMAP stay current
+
+**Acceptance criteria:**
+- [ ] `npm run build` and `npm start` use the same skill set locally and in published packages
+- [ ] The server-reported version matches `mcp-server/package.json`
+- [ ] CI fails if docs or packaged skill copies drift from the canonical source
+
+---
+
 ### Priority 3 — Distribution
 
 | Channel | Status | Next action |
 |---------|--------|-------------|
 | GitHub (public) | Ready to flip | Make repo public |
-| npm (`clawskills-mcp`) | ✅ Live — v0.2.3 | Maintain via `release.yml` |
+| npm (`clawskills-mcp`) | ✅ Live — v0.3.4 | Maintain via `release.yml` |
 | MCP registry listings | Not submitted | Submit to glama.ai, mcp.so, smithery.ai after public launch |
 | Docs website | Planned | Mintlify — fastest path to SEO-friendly browsable docs |
 | Lane A vs B | TBD | Revisit after first traction signals from public launch |
@@ -98,7 +92,7 @@ A weekly automated check that skill docs aren't stale and that key API patterns 
 
 ### Priority 4 — Complete Phase 4 & 5 gaps
 
-These are lower priority than new skills but worth finishing:
+These are lower priority than freshness and packaging work, but worth finishing:
 
 **Phase 4 gaps (Bulk operations):**
 - Salesforce Bulk API v2: end-to-end CSV ingest tested at ≥500 rows with error-row reporting

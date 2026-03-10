@@ -18,8 +18,25 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 function resolveSkillsDir(): string {
   if (process.env.SKILLS_DIR) return process.env.SKILLS_DIR;
-  // From dist/index.js → ../../skills  (or src/index.ts → ../../skills)
-  return path.resolve(__dirname, "../skills");
+
+  // Prefer the repo-root skills directory in local development, but fall back
+  // to the bundled package copy for published installs.
+  const candidates = [
+    path.resolve(__dirname, "../../skills"),
+    path.resolve(__dirname, "../skills"),
+  ];
+
+  for (const candidate of candidates) {
+    if (fs.existsSync(candidate)) return candidate;
+  }
+
+  return candidates[0];
+}
+
+function resolvePackageVersion(): string {
+  const packageJsonPath = path.resolve(__dirname, "../package.json");
+  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8")) as { version?: string };
+  return packageJson.version ?? "0.0.0";
 }
 
 function loadSkills(skillsDir: string): Map<string, string> {
@@ -172,17 +189,18 @@ function skillSummary(content: string): string {
 // Exports for testing
 // ---------------------------------------------------------------------------
 
-export { loadSkills, extractSection, findSkill, searchSkills, skillSummary };
+export { resolveSkillsDir, resolvePackageVersion, loadSkills, extractSection, findSkill, searchSkills, skillSummary };
 
 // ---------------------------------------------------------------------------
 // MCP Server setup
 // ---------------------------------------------------------------------------
 
 const SKILLS_DIR = resolveSkillsDir();
+const PACKAGE_VERSION = resolvePackageVersion();
 const skills = loadSkills(SKILLS_DIR);
 
 const server = new Server(
-  { name: "clawskills-mcp", version: "0.1.0" },
+  { name: "clawskills-mcp", version: PACKAGE_VERSION },
   { capabilities: { tools: {} } }
 );
 

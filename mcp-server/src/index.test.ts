@@ -3,7 +3,7 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import { fileURLToPath } from "url";
-import { loadSkills, extractSection, findSkill, searchSkills, skillSummary } from "./index.js";
+import { resolveSkillsDir, resolvePackageVersion, loadSkills, extractSection, findSkill, searchSkills, skillSummary } from "./index.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REAL_SKILLS_DIR = path.resolve(__dirname, "../../skills");
@@ -84,6 +84,26 @@ describe("loadSkills", () => {
     } finally {
       fs.rmSync(dir, { recursive: true, force: true });
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Environment and package metadata
+// ---------------------------------------------------------------------------
+
+describe("resolveSkillsDir", () => {
+  it("prefers the canonical repo-root skills directory", () => {
+    expect(path.basename(resolveSkillsDir())).toBe("skills");
+    expect(loadSkills(resolveSkillsDir()).has("linear")).toBe(true);
+    expect(loadSkills(resolveSkillsDir()).has("stripe")).toBe(true);
+  });
+});
+
+describe("resolvePackageVersion", () => {
+  it("matches package.json", () => {
+    const packageJsonPath = path.resolve(__dirname, "../package.json");
+    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8")) as { version: string };
+    expect(resolvePackageVersion()).toBe(packageJson.version);
   });
 });
 
