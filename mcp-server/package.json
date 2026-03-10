@@ -33,8 +33,11 @@
     "skills/"
   ],
   "scripts": {
-    "prepack": "rm -rf ./skills && cp -r ../skills ./skills",
-    "build": "tsc",
+    "sync:skills": "node scripts/sync-skills.mjs",
+    "check:skills": "node scripts/check-skills.mjs",
+    "check:freshness": "node scripts/check-skills.mjs --freshness",
+    "prepack": "npm run sync:skills",
+    "build": "npm run sync:skills && tsc",
     "start": "node dist/index.js",
     "dev": "ts-node src/index.ts",
     "test": "vitest run",

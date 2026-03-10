@@ -1,5 +1,9 @@
 # Asana Skill
 
+> **Last validated:** 2026-02-19 | **API:** Asana REST API 1.0
+> **REST base URL:** `https://app.asana.com/api/1.0`
+> **Assumed product:** Asana cloud. Enterprise controls, SCIM, and admin APIs may require additional scopes and plan-specific access.
+
 ## What this skill enables
 
 - Automatically create, assign, and structure tasks from any external intake channel (forms, emails, Slack messages, webhook events) so work is captured without manual entry.

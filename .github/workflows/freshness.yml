@@ -1,11 +1,12 @@
-name: CI
+name: Skills Freshness
 
 on:
-  push:
-  pull_request:
+  schedule:
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
 
 jobs:
-  test:
+  freshness:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -14,9 +15,5 @@ jobs:
           node-version: 22
       - run: npm ci
         working-directory: mcp-server
-      - run: npm run build
-        working-directory: mcp-server
-      - run: npm test
-        working-directory: mcp-server
-      - run: npm run check:skills
+      - run: npm run check:freshness
         working-directory: mcp-server
