@@ -1,6 +1,6 @@
 # ClawSkills
 
-A library of integration skill documents for the most common SaaS platforms used in go-to-market and operations workflows. Each skill doc teaches an **AI agent, automation builder, or LLM** how to reliably use a platform's API — with working code examples, rate limit rules, error playbooks, and up-to-date version info.
+A library of integration skill documents for the most common SaaS platforms used in go-to-market and operations workflows. Each skill doc teaches an **AI agent, automation builder, or LLM** how to reliably use a platform's API with working code examples, rate limit rules, error playbooks, and platform-specific version details.
 
 ---
 
@@ -39,6 +39,8 @@ Each `skill.md` follows the same structure:
 - **Testing checklist** — QA checklist you can run against a sandbox
 - **Sources** — official doc links
 
+Each skill tracks its own platform version and `Last validated` date in the document header. The MCP package has a separate npm version because it versions the server/tooling layer, not the underlying SaaS APIs.
+
 ---
 
 ## Use with Claude via MCP (recommended)
@@ -46,7 +48,7 @@ Each `skill.md` follows the same structure:
 ClawSkills ships as an MCP server that exposes all skill docs as tools directly inside Claude.
 
 ```bash
-npx clawskills-mcp
+npx -y clawskills-mcp
 ```
 
 Or install permanently:
@@ -62,7 +64,7 @@ Add to your Claude Desktop / Claude Code config:
   "mcpServers": {
     "clawskills": {
       "command": "npx",
-      "args": ["clawskills-mcp"]
+      "args": ["-y", "clawskills-mcp"]
     }
   }
 }
