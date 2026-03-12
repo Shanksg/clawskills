@@ -685,6 +685,32 @@ curl -X POST \
 
 ---
 
+### Cross-tool recipe: HubSpot Deal Won -> Asana project kickoff
+
+**Goal:** Start onboarding or implementation work in Asana when a HubSpot Deal reaches `closedwon`.
+
+**Flow:**
+1. Receive a HubSpot webhook for `deal.propertyChange`.
+2. Confirm the new `dealstage` maps to closed-won in the target pipeline.
+3. Fetch the Deal, associated Company, and primary Contact from HubSpot.
+4. Create the Asana task or project in the correct team or project template.
+5. Store the Asana `task_gid` or `project_gid` back in HubSpot or in your integration DB.
+
+**Suggested Asana fields:**
+
+| Asana field | Source |
+|---|---|
+| `name` | `Onboard {dealname}` |
+| `notes` | Deal URL, customer, ARR, owner, launch context |
+| `assignee` | mapped CSM or implementation owner |
+| `due_on` | kickoff or target launch date |
+| `custom_fields` | plan, ARR, onboarding tier, deal ID |
+
+**Operational guardrails:**
+- Prevent duplicates by checking your mapping store before creating a new Asana record.
+- If you use a project template, create the project once and then create the kickoff task inside it.
+- HubSpot webhooks are at-least-once delivery; your creation path must be idempotent.
+
 ## Query patterns & filtering
 
 ### Task search

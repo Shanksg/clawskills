@@ -378,9 +378,27 @@ curl -s "$BASE/services/data/v66.0/jobs/ingest/$JOB_ID" \
 # Step 5 — retrieve failed records
 curl -s "$BASE/services/data/v66.0/jobs/ingest/$JOB_ID/failedResults" \
   -H "Authorization: Bearer $TOKEN"
+
+# Step 6 — retrieve successful and unprocessed records for reconciliation
+curl -s "$BASE/services/data/v66.0/jobs/ingest/$JOB_ID/successfulResults" \
+  -H "Authorization: Bearer $TOKEN"
+
+curl -s "$BASE/services/data/v66.0/jobs/ingest/$JOB_ID/unprocessedRecords" \
+  -H "Authorization: Bearer $TOKEN"
 ```
 
 **When to use Bulk API v2:** >1,000 records. For <1,000 records, REST is simpler and faster.
+
+**CSV and job design tips:**
+- Keep one object type per job. Do not mix Leads and Contacts in the same ingest file.
+- Include only columns you intend to write. Extra CSV columns are treated as field references and can fail the row.
+- Shard very large backfills into multiple jobs so a single failure does not block the full dataset.
+- Reconcile with all three result streams: `successfulResults`, `failedResults`, and `unprocessedRecords`.
+
+**Partial-failure policy:**
+- Retry only `unprocessedRecords` automatically.
+- Send `failedResults` to a remediation queue with the Salesforce error message and original source key.
+- Do not advance the upstream source cursor until every row is either successful or quarantined.
 
 ---
 
@@ -409,6 +427,33 @@ def handler(event):
 **Pitfalls:** CDC events do not include all field values — only changed fields. Fetch the full record if you need complete data.
 
 ---
+
+### Cross-tool recipe: Salesforce Lead -> HubSpot Contact sync
+
+**Goal:** Create or update a HubSpot Contact whenever a Salesforce Lead is created or updated, deduplicating by email.
+
+**Flow:**
+1. Query Salesforce Leads modified since the last sync boundary using `LastModifiedDate`.
+2. Skip records with blank `Email` or `IsConverted = true`.
+3. In HubSpot, search by `email` first. If found, `PATCH` the Contact. If not, create it.
+4. Store the mapping `Lead.Id -> HubSpot contact id` in your integration DB, but treat `email` as the primary dedup key.
+5. Write a sync marker back to Salesforce only after the HubSpot write succeeds.
+
+**Field mapping (minimum viable):**
+
+| Salesforce Lead | HubSpot Contact |
+|---|---|
+| `Email` | `email` |
+| `FirstName` | `firstname` |
+| `LastName` | `lastname` |
+| `Company` | `company` |
+| `Phone` | `phone` |
+| `LeadSource` | `lead_source` or custom property |
+
+**Operational guardrails:**
+- Prefer a watermark sync (`LastModifiedDate >= cursor`) plus a small overlap window to avoid missed updates.
+- Do not use Bulk API v2 for near-real-time sync unless you are processing a large backfill.
+- If HubSpot rejects one record, quarantine that record and continue the rest of the sync batch.
 
 ## Query patterns & filtering
 

@@ -462,6 +462,36 @@ The `expand=transitions.fields` parameter returns the fields required for each t
 
 ---
 
+### Cross-tool recipe: Zendesk Ticket -> Jira Bug escalation
+
+**Goal:** Create or update a Jira Bug when a Zendesk ticket meets escalation criteria.
+
+**Escalation trigger examples:**
+- Zendesk ticket priority becomes `urgent`
+- Tag includes `engineering`
+- Custom field indicates product defect
+
+**Flow:**
+1. Receive the Zendesk webhook or poll Incremental Export.
+2. Build a deterministic external key, for example `zendesk:{ticket_id}`.
+3. Search Jira for an existing issue with that external key in a custom field or label.
+4. If found, update severity, assignee, and status. If not found, create a Bug with the Zendesk URL in the description.
+5. Post the Jira issue key back to Zendesk as an internal note or custom field.
+
+**Minimum field mapping:**
+
+| Zendesk | Jira |
+|---|---|
+| `subject` | `summary` |
+| `description` / latest public comment | `description` (ADF) |
+| `priority` | `priority` |
+| `ticket id` | custom external ID field |
+| `tags` | `labels` |
+
+**Status sync recommendation:**
+- One-way sync into Jira is safer initially.
+- Add reverse Jira -> Zendesk status updates only after you define an explicit state map and conflict rules.
+
 ## Query patterns & filtering
 
 ### JQL incremental sync

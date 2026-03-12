@@ -390,6 +390,67 @@ GET https://api.hubapi.com/crm/v3/imports/{importId}
 # importStatus: STARTED → PROCESSING → DONE
 ```
 
+**When to use Imports vs batch endpoints:**
+- Use `batch/create` or `batch/update` for API-driven writes where you already have structured JSON and need immediate responses.
+- Use Imports for backfills, CSV-based migrations, or cases where users export flat files from another system.
+
+**Partial failure handling:**
+- Imports can finish with row-level failures even when the job completes successfully.
+- Always inspect the import summary and error rows before marking the source batch as complete.
+- Treat duplicate email collisions as data-quality events, not transient API failures.
+
+**Batch write guardrails:**
+- Max 100 inputs per batch request.
+- For large syncs, shard into batches of 100 and apply a short concurrency limit so you do not burst into 429s.
+- Search first when deduplicating by email; batch create is not idempotent.
+
+---
+
+### Cross-tool recipe: Salesforce Lead -> HubSpot Contact sync
+
+**Goal:** Mirror new or updated Salesforce Leads into HubSpot Contacts for marketing and lifecycle automation.
+
+**HubSpot-side pattern:**
+1. Search Contacts by `email`.
+2. If found, `PATCH /crm/v3/objects/contacts/{id}` with mapped fields.
+3. If not found, `POST /crm/v3/objects/contacts`.
+4. Optionally stamp a custom property like `salesforce_lead_id` so future reconciliations do not depend solely on email.
+
+**Recommended property mapping:**
+
+| HubSpot Contact | Source from Salesforce |
+|---|---|
+| `email` | `Lead.Email` |
+| `firstname` | `Lead.FirstName` |
+| `lastname` | `Lead.LastName` |
+| `company` | `Lead.Company` |
+| `phone` | `Lead.Phone` |
+| `lifecyclestage` | derived mapping from lead status |
+
+**Failure policy:**
+- `400` validation errors: quarantine the record with the source Lead ID and failing field names.
+- `409` or duplicate conflicts: re-run a search by email, then update the winning Contact instead of creating a second record.
+- `429`: respect `Retry-After` and retry the shard, not the full sync job.
+
+---
+
+### Cross-tool recipe: HubSpot Deal Won -> Asana project kickoff
+
+**Goal:** When a Deal enters `closedwon`, create onboarding work in Asana.
+
+**Flow:**
+1. Subscribe to `deal.propertyChange` for `dealstage`.
+2. Filter for the pipeline stage representing "closed won".
+3. Fetch the Deal plus associated Company and primary Contact.
+4. Create the Asana task or project with the customer name, ARR, owner, and launch date.
+5. Store the resulting Asana `gid` in HubSpot or in your integration DB.
+
+**Minimum payload to send to Asana:**
+- `name`: `Onboard {dealname}`
+- `notes`: include the HubSpot deal URL, company, close date, and owner
+- `due_on`: derived from kickoff SLA or launch date
+- `custom_fields`: ARR, segment, onboarding tier, source deal ID
+
 ---
 
 ## Query patterns & filtering

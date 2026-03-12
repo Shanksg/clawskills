@@ -493,6 +493,11 @@ curl -u "agent@example.com/token:TOKEN" \
 
 **Validation**: Poll job status to `completed`. Spot-check 5 random ticket IDs from the batch to confirm `assignee_id` updated correctly.
 
+**Operational notes:**
+- Use `update_many` for homogeneous changes like tags, assignee, or status across a known set of ticket IDs.
+- Keep request batches at 100 IDs max and persist the returned `job_status_id`.
+- If the job partially succeeds, re-run only the failed IDs after inspecting the job result.
+
 ---
 
 ### Recipe 8: Manage agent permissions and group membership
@@ -539,6 +544,39 @@ curl -u "admin@example.com/token:TOKEN" \
 - Removing an agent from a group does not re-assign their open tickets — do this explicitly.
 
 **Validation**: List group members and confirm the new user appears: `GET /api/v2/groups/445566/memberships.json`.
+
+---
+
+### Cross-tool recipe: Zendesk Ticket -> Jira Bug escalation
+
+**Goal**: Escalate a Zendesk ticket into Jira when support confirms the issue is a product defect.
+
+**Trigger examples**:
+- Agent adds tag `engineering`
+- Ticket priority changes to `urgent`
+- Custom field `issue_type` becomes `bug`
+
+**Flow**:
+1. Capture the Zendesk event via webhook or Incremental Export.
+2. Build a stable external key such as `zendesk:{ticket_id}`.
+3. Search Jira for an existing issue using that key in a custom field or label.
+4. If no issue exists, create a Jira Bug with the Zendesk URL, customer impact, and reproduction details.
+5. Write the Jira issue key back to Zendesk as an internal note or custom field so agents can track engineering progress.
+
+**Minimum field mapping**:
+
+| Zendesk ticket field | Jira field |
+|---|---|
+| `subject` | `summary` |
+| latest public comment | `description` |
+| `priority` | `priority` |
+| `tags` | `labels` |
+| `id` | external ID field / label |
+
+**Operational guardrails**:
+- Make the create path idempotent; webhooks can be retried.
+- Keep status sync one-way at first. Bi-directional sync needs an explicit state map and conflict resolution policy.
+- Post only sanitized customer context into Jira if Zendesk comments may include PII.
 
 ---
 
@@ -602,6 +640,13 @@ GET /api/v2/incremental/tickets.json?start_time=1708300800
 - Also available for users and organizations: `/api/v2/incremental/users.json`, `/api/v2/incremental/organizations.json`.
 - Events include `deleted` tickets — check `status` field.
 
+**Production sync pattern:**
+1. Start with `start_time` at least 5 minutes in the past.
+2. Continue following the returned window until you have drained the stream for the current run.
+3. Persist the returned `end_time`, not your request timestamp.
+4. Re-run with a small overlap window to protect against delayed indexing and consumer crashes.
+5. Deduplicate by ticket `id` and latest `updated_at` in your sink.
+
 ### Sorting
 
 Search API: `&sort_by=created_at&sort_order=asc` (or `desc`).
@@ -647,6 +692,13 @@ def zendesk_request(method, url, **kwargs):
         return resp
     raise Exception("Exceeded retry budget")
 ```
+
+### Bulk update and export guardrails
+
+- `update_many` is efficient for operational changes across up to 100 tickets, but it is not a substitute for a full sync.
+- Poll the returned job status before assuming the bulk update succeeded.
+- For analytics or warehouse sync, use Incremental Export rather than paginating Search or list endpoints.
+- Keep writes and reads separate: use `update_many` for operational changes, Incremental Export for system-of-record ingestion.
 
 ### Retry vs fail-fast
 

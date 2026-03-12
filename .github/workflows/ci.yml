@@ -20,3 +20,5 @@ jobs:
         working-directory: mcp-server
       - run: npm run check:skills
         working-directory: mcp-server
+      - run: npm run check:docs
+        working-directory: mcp-server

@@ -36,6 +36,7 @@
     "sync:skills": "node scripts/sync-skills.mjs",
     "check:skills": "node scripts/check-skills.mjs",
     "check:freshness": "node scripts/check-skills.mjs --freshness",
+    "check:docs": "node scripts/check-docs.mjs",
     "prepack": "npm run sync:skills",
     "build": "npm run sync:skills && tsc",
     "start": "node dist/index.js",
