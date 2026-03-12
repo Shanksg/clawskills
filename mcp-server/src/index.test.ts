@@ -3,10 +3,23 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import { fileURLToPath } from "url";
-import { resolveSkillsDir, resolvePackageVersion, loadSkills, extractSection, findSkill, searchSkills, skillSummary } from "./index.js";
+import {
+  resolveSkillsDir,
+  resolvePlaybooksDir,
+  resolvePackageVersion,
+  loadSkills,
+  loadPlaybooks,
+  extractSection,
+  findSkill,
+  findPlaybook,
+  searchSkills,
+  searchPlaybooks,
+  skillSummary,
+} from "./index.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REAL_SKILLS_DIR = path.resolve(__dirname, "../../skills");
+const REAL_PLAYBOOKS_DIR = path.resolve(__dirname, "../../playbooks");
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -18,6 +31,14 @@ function makeTempSkillsDir(skills: Record<string, string>): string {
     const skillDir = path.join(dir, slug);
     fs.mkdirSync(skillDir, { recursive: true });
     fs.writeFileSync(path.join(skillDir, "skill.md"), content, "utf-8");
+  }
+  return dir;
+}
+
+function makeTempPlaybooksDir(playbooks: Record<string, string>): string {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "clawskills-playbooks-test-"));
+  for (const [slug, content] of Object.entries(playbooks)) {
+    fs.writeFileSync(path.join(dir, `${slug}.md`), content, "utf-8");
   }
   return dir;
 }
@@ -49,13 +70,19 @@ POST /repos/{owner}/{repo}/issues
 `;
 
 let tempDir: string;
+let tempPlaybooksDir: string;
 
 beforeAll(() => {
   tempDir = makeTempSkillsDir({ github: SAMPLE_CONTENT, salesforce: "# Salesforce\nCRM platform.\n## Overview\nSalesforce is a CRM." });
+  tempPlaybooksDir = makeTempPlaybooksDir({
+    "zendesk-jira": "# Zendesk -> Jira\n\nEscalate bugs from support into engineering.\n\n## Idempotency\n\nUse zendesk:{ticket_id}.",
+    "hubspot-asana": "# HubSpot -> Asana\n\nCreate onboarding work from closed won deals.",
+  });
 });
 
 afterAll(() => {
   fs.rmSync(tempDir, { recursive: true, force: true });
+  fs.rmSync(tempPlaybooksDir, { recursive: true, force: true });
 });
 
 // ---------------------------------------------------------------------------
@@ -99,11 +126,35 @@ describe("resolveSkillsDir", () => {
   });
 });
 
+describe("resolvePlaybooksDir", () => {
+  it("prefers the canonical repo-root playbooks directory", () => {
+    expect(path.basename(resolvePlaybooksDir())).toBe("playbooks");
+    expect(loadPlaybooks(resolvePlaybooksDir()).has("zendesk-jira-bug-escalation")).toBe(true);
+  });
+});
+
 describe("resolvePackageVersion", () => {
   it("matches package.json", () => {
     const packageJsonPath = path.resolve(__dirname, "../package.json");
     const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8")) as { version: string };
     expect(resolvePackageVersion()).toBe(packageJson.version);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// loadPlaybooks
+// ---------------------------------------------------------------------------
+
+describe("loadPlaybooks", () => {
+  it("loads markdown files from a directory", () => {
+    const playbooks = loadPlaybooks(tempPlaybooksDir);
+    expect(playbooks.size).toBe(2);
+    expect(playbooks.has("zendesk-jira")).toBe(true);
+  });
+
+  it("returns empty map for missing directory", () => {
+    const playbooks = loadPlaybooks("/nonexistent/playbooks/path");
+    expect(playbooks.size).toBe(0);
   });
 });
 
@@ -138,6 +189,22 @@ describe("findSkill", () => {
 
   it("returns undefined for no match", () => {
     expect(findSkill(skills, "zzznomatch")).toBeUndefined();
+  });
+});
+
+describe("findPlaybook", () => {
+  let playbooks: Map<string, string>;
+
+  beforeAll(() => {
+    playbooks = loadPlaybooks(tempPlaybooksDir);
+  });
+
+  it("returns key for exact match", () => {
+    expect(findPlaybook(playbooks, "zendesk-jira")).toBe("zendesk-jira");
+  });
+
+  it("matches normalized input", () => {
+    expect(findPlaybook(playbooks, "zendesk jira")).toBe("zendesk-jira");
   });
 });
 
@@ -183,7 +250,7 @@ describe("searchSkills", () => {
   it("returns results for a matching query", () => {
     const results = searchSkills(skills, "Personal Access Token");
     expect(results.length).toBeGreaterThan(0);
-    expect(results[0].skill).toBe("github");
+    expect(results[0].name).toBe("github");
     expect(results[0].excerpts.length).toBeGreaterThan(0);
   });
 
@@ -203,6 +270,20 @@ describe("searchSkills", () => {
     const m = new Map([["test", manyMatches]]);
     const results = searchSkills(m, "keyword");
     expect(results[0].excerpts.length).toBeLessThanOrEqual(5);
+  });
+});
+
+describe("searchPlaybooks", () => {
+  let playbooks: Map<string, string>;
+
+  beforeAll(() => {
+    playbooks = loadPlaybooks(tempPlaybooksDir);
+  });
+
+  it("returns results for a matching query", () => {
+    const results = searchPlaybooks(playbooks, "idempotency");
+    expect(results.length).toBeGreaterThan(0);
+    expect(results[0].name).toBe("zendesk-jira");
   });
 });
 
@@ -277,6 +358,33 @@ describe("real skills", () => {
   it("every skill file is at least 5KB", () => {
     for (const [slug, content] of skills.entries()) {
       expect(content.length, `${slug}: suspiciously short skill file`).toBeGreaterThan(5000);
+    }
+  });
+});
+
+describe("real playbooks", () => {
+  let playbooks: Map<string, string>;
+
+  beforeAll(() => {
+    playbooks = loadPlaybooks(REAL_PLAYBOOKS_DIR);
+  });
+
+  it("loads all expected playbooks", () => {
+    const knownPlaybooks = [
+      "hubspot-asana-onboarding",
+      "salesforce-hubspot-lead-sync",
+      "zendesk-jira-bug-escalation",
+    ];
+
+    for (const slug of knownPlaybooks) {
+      expect(playbooks.has(slug), `Missing playbook: ${slug}`).toBe(true);
+    }
+  });
+
+  it("every playbook has a non-empty summary line", () => {
+    for (const [slug, content] of playbooks.entries()) {
+      const summary = skillSummary(content);
+      expect(summary, `${slug}: empty summary`).not.toBe("");
     }
   });
 });

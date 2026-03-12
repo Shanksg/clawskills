@@ -33,6 +33,21 @@ function resolveSkillsDir(): string {
   return candidates[0];
 }
 
+function resolvePlaybooksDir(): string {
+  if (process.env.PLAYBOOKS_DIR) return process.env.PLAYBOOKS_DIR;
+
+  const candidates = [
+    path.resolve(__dirname, "../../playbooks"),
+    path.resolve(__dirname, "../playbooks"),
+  ];
+
+  for (const candidate of candidates) {
+    if (fs.existsSync(candidate)) return candidate;
+  }
+
+  return candidates[0];
+}
+
 function resolvePackageVersion(): string {
   const packageJsonPath = path.resolve(__dirname, "../package.json");
   const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8")) as { version?: string };
@@ -58,6 +73,26 @@ function loadSkills(skillsDir: string): Map<string, string> {
 
   process.stderr.write(`[clawskills-mcp] Loaded ${skills.size} skills: ${[...skills.keys()].join(", ")}\n`);
   return skills;
+}
+
+function loadPlaybooks(playbooksDir: string): Map<string, string> {
+  const playbooks = new Map<string, string>();
+
+  if (!fs.existsSync(playbooksDir)) {
+    process.stderr.write(`[clawskills-mcp] Playbooks directory not found: ${playbooksDir}\n`);
+    return playbooks;
+  }
+
+  const entries = fs.readdirSync(playbooksDir, { withFileTypes: true });
+  for (const entry of entries) {
+    if (!entry.isFile() || !entry.name.endsWith(".md") || entry.name === "INDEX.md") continue;
+    const slug = entry.name.replace(/\.md$/, "");
+    const content = fs.readFileSync(path.join(playbooksDir, entry.name), "utf-8");
+    playbooks.set(slug, content);
+  }
+
+  process.stderr.write(`[clawskills-mcp] Loaded ${playbooks.size} playbooks: ${[...playbooks.keys()].join(", ")}\n`);
+  return playbooks;
 }
 
 // ---------------------------------------------------------------------------
@@ -128,22 +163,26 @@ function findSkill(skills: Map<string, string>, name: string): string | undefine
   return undefined;
 }
 
+function findPlaybook(playbooks: Map<string, string>, name: string): string | undefined {
+  return findSkill(playbooks, name);
+}
+
 // ---------------------------------------------------------------------------
 // Search helper
 // ---------------------------------------------------------------------------
 
 interface SearchResult {
-  skill: string;
+  name: string;
   excerpts: string[];
 }
 
-function searchSkills(skills: Map<string, string>, query: string): SearchResult[] {
+function searchDocuments(documents: Map<string, string>, query: string): SearchResult[] {
   const results: SearchResult[] = [];
   const lowerQuery = query.toLowerCase();
   const CONTEXT_LINES = 3;
   const MAX_PER_SKILL = 5;
 
-  for (const [slug, content] of skills.entries()) {
+  for (const [name, content] of documents.entries()) {
     const lines = content.split("\n");
     const excerpts: string[] = [];
     const usedRanges: Array<[number, number]> = [];
@@ -166,11 +205,19 @@ function searchSkills(skills: Map<string, string>, query: string): SearchResult[
     }
 
     if (excerpts.length > 0) {
-      results.push({ skill: slug, excerpts });
+      results.push({ name, excerpts });
     }
   }
 
   return results;
+}
+
+function searchSkills(skills: Map<string, string>, query: string): SearchResult[] {
+  return searchDocuments(skills, query);
+}
+
+function searchPlaybooks(playbooks: Map<string, string>, query: string): SearchResult[] {
+  return searchDocuments(playbooks, query);
 }
 
 // ---------------------------------------------------------------------------
@@ -189,15 +236,29 @@ function skillSummary(content: string): string {
 // Exports for testing
 // ---------------------------------------------------------------------------
 
-export { resolveSkillsDir, resolvePackageVersion, loadSkills, extractSection, findSkill, searchSkills, skillSummary };
+export {
+  resolveSkillsDir,
+  resolvePlaybooksDir,
+  resolvePackageVersion,
+  loadSkills,
+  loadPlaybooks,
+  extractSection,
+  findSkill,
+  findPlaybook,
+  searchSkills,
+  searchPlaybooks,
+  skillSummary,
+};
 
 // ---------------------------------------------------------------------------
 // MCP Server setup
 // ---------------------------------------------------------------------------
 
 const SKILLS_DIR = resolveSkillsDir();
+const PLAYBOOKS_DIR = resolvePlaybooksDir();
 const PACKAGE_VERSION = resolvePackageVersion();
 const skills = loadSkills(SKILLS_DIR);
+const playbooks = loadPlaybooks(PLAYBOOKS_DIR);
 
 const server = new Server(
   { name: "clawskills-mcp", version: PACKAGE_VERSION },
@@ -241,12 +302,41 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         required: ["query"],
       },
     },
+    {
+      name: "list_playbooks",
+      description: "List all available ClawSkills workflow playbooks.",
+      inputSchema: { type: "object", properties: {}, required: [] },
+    },
+    {
+      name: "get_playbook",
+      description: "Retrieve a ClawSkills workflow playbook by name (slug).",
+      inputSchema: {
+        type: "object",
+        properties: {
+          name: { type: "string", description: "Playbook slug, e.g. 'zendesk-jira-bug-escalation'" },
+        },
+        required: ["name"],
+      },
+    },
+    {
+      name: "search_playbooks",
+      description: "Search across workflow playbooks for a query string and return matching excerpts with context.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          query: { type: "string", description: "Search query, e.g. 'idempotency', 'rollback', 'customer impact'" },
+        },
+        required: ["query"],
+      },
+    },
   ],
 }));
 
 // Call tools
 const GetSkillSchema = z.object({ name: z.string(), section: z.string().optional() });
+const GetPlaybookSchema = z.object({ name: z.string() });
 const SearchSkillsSchema = z.object({ query: z.string() });
+const SearchPlaybooksSchema = z.object({ query: z.string() });
 
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: args } = request.params;
@@ -260,6 +350,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       return `• **${slug}** — ${summary}`;
     });
     return { content: [{ type: "text", text: `Available skills (${skills.size}):\n\n${lines.join("\n")}` }] };
+  }
+
+  if (name === "list_playbooks") {
+    if (playbooks.size === 0) {
+      return { content: [{ type: "text", text: "No playbooks loaded. Check PLAYBOOKS_DIR." }] };
+    }
+    const lines = [...playbooks.entries()].map(([slug, content]) => `• **${slug}** — ${skillSummary(content)}`);
+    return { content: [{ type: "text", text: `Available playbooks (${playbooks.size}):\n\n${lines.join("\n")}` }] };
   }
 
   if (name === "get_skill") {
@@ -307,13 +405,51 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     }
 
     const output = results
-      .map(({ skill, excerpts }) => {
+      .map(({ name: skill, excerpts }) => {
         const blocks = excerpts.map((e, i) => `--- match ${i + 1} ---\n${e}`).join("\n\n");
         return `### ${skill}\n\n${blocks}`;
       })
       .join("\n\n---\n\n");
 
     return { content: [{ type: "text", text: `Search results for "${query}":\n\n${output}` }] };
+  }
+
+  if (name === "get_playbook") {
+    const parsed = GetPlaybookSchema.safeParse(args);
+    if (!parsed.success) {
+      return { content: [{ type: "text", text: `Invalid arguments: ${parsed.error.message}` }], isError: true };
+    }
+    const slug = findPlaybook(playbooks, parsed.data.name);
+    if (!slug) {
+      const available = [...playbooks.keys()].join(", ");
+      return {
+        content: [{ type: "text", text: `Playbook "${parsed.data.name}" not found. Available playbooks: ${available}` }],
+        isError: true,
+      };
+    }
+    return { content: [{ type: "text", text: playbooks.get(slug)! }] };
+  }
+
+  if (name === "search_playbooks") {
+    const parsed = SearchPlaybooksSchema.safeParse(args);
+    if (!parsed.success) {
+      return { content: [{ type: "text", text: `Invalid arguments: ${parsed.error.message}` }], isError: true };
+    }
+    const { query } = parsed.data;
+    const results = searchPlaybooks(playbooks, query);
+
+    if (results.length === 0) {
+      return { content: [{ type: "text", text: `No playbook results found for "${query}".` }] };
+    }
+
+    const output = results
+      .map(({ name: playbook, excerpts }) => {
+        const blocks = excerpts.map((e, i) => `--- match ${i + 1} ---\n${e}`).join("\n\n");
+        return `### ${playbook}\n\n${blocks}`;
+      })
+      .join("\n\n---\n\n");
+
+    return { content: [{ type: "text", text: `Playbook search results for "${query}":\n\n${output}` }] };
   }
 
   return { content: [{ type: "text", text: `Unknown tool: ${name}` }], isError: true };

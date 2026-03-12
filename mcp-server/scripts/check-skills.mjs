@@ -6,6 +6,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const packageDir = path.resolve(__dirname, "..");
 const canonicalSkillsDir = path.resolve(packageDir, "../skills");
 const bundledSkillsDir = path.resolve(packageDir, "skills");
+const canonicalPlaybooksDir = path.resolve(packageDir, "../playbooks");
+const bundledPlaybooksDir = path.resolve(packageDir, "playbooks");
 const MAX_AGE_DAYS = 90;
 
 function listSkillSlugs(skillsDir) {
@@ -18,6 +20,18 @@ function listSkillSlugs(skillsDir) {
 
 function readSkillContent(skillsDir, slug) {
   return fs.readFileSync(path.join(skillsDir, slug, "skill.md"), "utf-8");
+}
+
+function listMarkdownSlugs(dir) {
+  if (!fs.existsSync(dir)) return [];
+  return fs.readdirSync(dir, { withFileTypes: true })
+    .filter((entry) => entry.isFile() && entry.name.endsWith(".md") && entry.name !== "INDEX.md")
+    .map((entry) => entry.name.replace(/\.md$/, ""))
+    .sort();
+}
+
+function readMarkdownContent(dir, slug) {
+  return fs.readFileSync(path.join(dir, `${slug}.md`), "utf-8");
 }
 
 function parseLastValidated(content) {
@@ -89,6 +103,38 @@ function checkParity() {
 
   if (failures.length === 0) {
     console.log(`[check-skills] Parity OK for ${canonicalSlugs.length} skills`);
+  } else {
+    console.error("[check-skills] Parity check failed:");
+    for (const failure of failures) {
+      console.error(`- ${failure}`);
+    }
+  }
+
+  const canonicalPlaybookSlugs = listMarkdownSlugs(canonicalPlaybooksDir);
+  const bundledPlaybookSlugs = listMarkdownSlugs(bundledPlaybooksDir);
+
+  if (canonicalPlaybookSlugs.join("\n") !== bundledPlaybookSlugs.join("\n")) {
+    failures.push(
+      `playbook directory mismatch\n  canonical: ${canonicalPlaybookSlugs.join(", ")}\n  bundled:   ${bundledPlaybookSlugs.join(", ")}`
+    );
+  }
+
+  for (const slug of canonicalPlaybookSlugs) {
+    const bundledPlaybookPath = path.join(bundledPlaybooksDir, `${slug}.md`);
+    if (!fs.existsSync(bundledPlaybookPath)) {
+      failures.push(`${slug}: missing bundled playbook`);
+      continue;
+    }
+
+    const canonicalContent = readMarkdownContent(canonicalPlaybooksDir, slug);
+    const bundledContent = readMarkdownContent(bundledPlaybooksDir, slug);
+    if (canonicalContent !== bundledContent) {
+      failures.push(`${slug}: bundled playbook content differs from canonical source`);
+    }
+  }
+
+  if (failures.length === 0) {
+    console.log(`[check-skills] Parity OK for ${canonicalSlugs.length} skills and ${canonicalPlaybookSlugs.length} playbooks`);
     return true;
   }
 

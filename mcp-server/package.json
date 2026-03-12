@@ -30,7 +30,8 @@
   },
   "files": [
     "dist/",
-    "skills/"
+    "skills/",
+    "playbooks/"
   ],
   "scripts": {
     "sync:skills": "node scripts/sync-skills.mjs",
