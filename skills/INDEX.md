@@ -3,6 +3,7 @@
 A curated library of integration skill documents for the most common SaaS platforms used in go-to-market and operations workflows. Each skill doc teaches an agent or automation builder how to reliably use that platform's API for high-value, production-grade workflows.
 
 → See [ROADMAP.md](./ROADMAP.md) for the prioritized build plan, phased milestones, and governance model.
+→ Cross-tool workflow guides now live in [`../playbooks/INDEX.md`](../playbooks/INDEX.md).
 
 ---
 

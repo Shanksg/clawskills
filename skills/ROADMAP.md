@@ -12,14 +12,14 @@ This skill set enables end-to-end automation and integration across the most com
 
 ---
 
-## Current state (as of 2026-03-10)
+## Current state (as of 2026-03-12)
 
 ### What's shipped
 
 | Layer | Status |
 |-------|--------|
 | **14 skill docs** — Monday.com, Salesforce, Jira, Dynamics 365, HubSpot, ServiceNow, Zendesk, Asana, GitHub, Figma, Slack, Stripe, Notion, Linear | ✅ Live |
-| **MCP server** — `clawskills-mcp` v0.3.6 on npm; `list_skills`, `get_skill`, `search_skills` | ✅ Live |
+| **MCP server** — `clawskills-mcp` v0.4.0 on npm; `list_skills`, `get_skill`, `search_skills` | ✅ Live |
 | **CI pipeline** — build + test on every push/PR via `ci.yml` | ✅ Live |
 | **Release automation** — `release.yml` workflow_dispatch → bump, tag, npm publish via OIDC | ✅ Live |
 | **Test suite** — Vitest unit tests + real-skills validation (required sections, ≥5 KB, all 14 tools) | ✅ Live |
@@ -83,7 +83,7 @@ The repo now needs tighter alignment between the canonical `skills/` directory, 
 | Channel | Status | Next action |
 |---------|--------|-------------|
 | GitHub (public) | Ready to flip | Make repo public |
-| npm (`clawskills-mcp`) | ✅ Live — v0.3.6 | Maintain via `release.yml` |
+| npm (`clawskills-mcp`) | ✅ Live — v0.4.0 | Maintain via `release.yml` |
 | MCP registry listings | Not submitted | Submit to glama.ai, mcp.so, smithery.ai after public launch |
 | Docs website | Planned | Mintlify — fastest path to SEO-friendly browsable docs |
 | Lane A vs B | TBD | Revisit after first traction signals from public launch |
@@ -105,6 +105,43 @@ These are lower priority than freshness and packaging work, but worth finishing:
 - Salesforce Lead → HubSpot Contact sync (dedup on email)
 
 Each recipe lives as a `## Cross-tool recipe` appendix section in the relevant primary skill doc (e.g., the Zendesk→Jira recipe goes in both `zendesk/skill.md` and `jira/skill.md`).
+
+---
+
+### Priority 5 — Workflow playbooks and retrieval UX
+
+The next product layer is workflow-first guidance, not only tool-by-tool references. This means shipping opinionated playbooks that show how multiple systems fit together operationally, then exposing them cleanly through MCP.
+
+**Backlog:**
+- Add a `playbooks/` directory with high-value cross-tool workflows
+- Ship 3 flagship playbooks first:
+  - Zendesk Ticket -> Jira Bug escalation
+  - HubSpot Deal Won -> Asana onboarding kickoff
+  - Salesforce Lead -> HubSpot Contact sync
+- Expand to additional high-frequency workflows:
+  - Slack incident -> Jira issue
+  - GitHub PR -> Slack notification
+  - Zendesk -> Salesforce case sync
+  - Stripe payment failed -> HubSpot task
+  - Notion request -> Asana task
+- Standardize each playbook format:
+  - business trigger
+  - systems involved
+  - source-of-truth decision
+  - field mapping
+  - idempotency strategy
+  - retry and partial-failure policy
+  - reconciliation and rollback guidance
+  - observability / alerting checks
+- Expose playbooks through MCP after the doc layer stabilizes:
+  - `list_playbooks`
+  - `get_playbook`
+  - search/ranking that prefers recipes and playbooks over generic mentions
+
+**Acceptance criteria:**
+- [ ] At least 3 production-grade playbooks checked into the repo
+- [ ] README and INDEX reference the playbooks layer
+- [ ] MCP server plan defined for playbook retrieval and discovery
 
 ---
 

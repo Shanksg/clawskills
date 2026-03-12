@@ -7,6 +7,12 @@ A library of integration skill documents for the most common SaaS platforms used
 ## What's in here
 
 ```
+playbooks/
+├── INDEX.md                 ← Workflow-level guides spanning multiple tools
+├── hubspot-asana-onboarding.md
+├── salesforce-hubspot-lead-sync.md
+└── zendesk-jira-bug-escalation.md
+
 skills/
 ├── INDEX.md                 ← Start here: all tools, top workflows, quick-ref tables
 ├── ROADMAP.md               ← Phased build plan and governance model
@@ -40,6 +46,8 @@ Each `skill.md` follows the same structure:
 - **Sources** — official doc links
 
 Each skill tracks its own platform version and `Last validated` date in the document header. The MCP package has a separate npm version because it versions the server/tooling layer, not the underlying SaaS APIs.
+
+The `playbooks/` layer captures cross-tool workflows end to end: trigger, system sequence, field mapping, idempotency, failure policy, and operational guardrails.
 
 ---
 
