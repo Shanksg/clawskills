@@ -176,9 +176,71 @@ interface SearchResult {
   excerpts: string[];
 }
 
+interface PlaybookMetadata {
+  title?: string;
+  systems: string[];
+  tags: string[];
+  triggerType?: string;
+}
+
+interface UnifiedSearchResult extends SearchResult {
+  contentType: "skill" | "playbook";
+  score: number;
+}
+
+function parseFrontmatter(content: string): Record<string, string | string[]> {
+  if (!content.startsWith("---\n")) return {};
+
+  const end = content.indexOf("\n---\n", 4);
+  if (end === -1) return {};
+
+  const block = content.slice(4, end);
+  const metadata: Record<string, string | string[]> = {};
+  let currentKey: string | null = null;
+
+  for (const rawLine of block.split("\n")) {
+    const line = rawLine.trimEnd();
+    const keyMatch = line.match(/^([a-zA-Z0-9_]+):\s*(.*)$/);
+    if (keyMatch) {
+      const [, key, value] = keyMatch;
+      if (value === "") {
+        metadata[key] = [];
+        currentKey = key;
+      } else {
+        metadata[key] = value.trim();
+        currentKey = null;
+      }
+      continue;
+    }
+
+    const listMatch = line.match(/^\s*-\s+(.*)$/);
+    if (listMatch && currentKey) {
+      const current = metadata[currentKey];
+      if (Array.isArray(current)) {
+        current.push(listMatch[1].trim());
+      }
+    }
+  }
+
+  return metadata;
+}
+
+function getPlaybookMetadata(content: string): PlaybookMetadata {
+  const frontmatter = parseFrontmatter(content);
+  const systems = Array.isArray(frontmatter.systems) ? frontmatter.systems : [];
+  const tags = Array.isArray(frontmatter.tags) ? frontmatter.tags : [];
+  return {
+    title: typeof frontmatter.title === "string" ? frontmatter.title : undefined,
+    systems,
+    tags,
+    triggerType: typeof frontmatter.trigger_type === "string" ? frontmatter.trigger_type : undefined,
+  };
+}
+
 function searchDocuments(documents: Map<string, string>, query: string): SearchResult[] {
   const results: SearchResult[] = [];
   const lowerQuery = query.toLowerCase();
+  const queryTerms = lowerQuery.split(/[^a-z0-9]+/).filter(Boolean);
   const CONTEXT_LINES = 3;
   const MAX_PER_SKILL = 5;
 
@@ -188,7 +250,10 @@ function searchDocuments(documents: Map<string, string>, query: string): SearchR
     const usedRanges: Array<[number, number]> = [];
 
     for (let i = 0; i < lines.length; i++) {
-      if (!lines[i].toLowerCase().includes(lowerQuery)) continue;
+      const lowerLine = lines[i].toLowerCase();
+      const matchesExact = lowerLine.includes(lowerQuery);
+      const matchesTerm = queryTerms.some((term) => lowerLine.includes(term));
+      if (!matchesExact && !matchesTerm) continue;
 
       const start = Math.max(0, i - CONTEXT_LINES);
       const end = Math.min(lines.length - 1, i + CONTEXT_LINES);
@@ -220,6 +285,40 @@ function searchPlaybooks(playbooks: Map<string, string>, query: string): SearchR
   return searchDocuments(playbooks, query);
 }
 
+function searchClawskills(skills: Map<string, string>, playbooks: Map<string, string>, query: string): UnifiedSearchResult[] {
+  const normalizedQuery = query.toLowerCase();
+  const queryTerms = normalizedQuery.split(/[^a-z0-9]+/).filter(Boolean);
+  const workflowHints = new Set([
+    "sync", "onboarding", "closed", "won", "handoff", "escalate",
+    "escalation", "workflow", "playbook", "incident", "notify",
+  ]);
+  const workflowShaped = queryTerms.some((term) => workflowHints.has(term));
+
+  const skillResults: UnifiedSearchResult[] = searchSkills(skills, query).map((result) => ({
+    ...result,
+    contentType: "skill",
+    score: result.excerpts.length * 10 + (workflowShaped ? 0 : 5),
+  }));
+
+  const playbookResults: UnifiedSearchResult[] = searchPlaybooks(playbooks, query).map((result) => {
+    const metadata = getPlaybookMetadata(playbooks.get(result.name)!);
+    const metadataText = [metadata.title, ...metadata.systems, ...metadata.tags, metadata.triggerType]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+    const metadataMatches = queryTerms.filter((term) => metadataText.includes(term)).length;
+    return {
+      ...result,
+      contentType: "playbook",
+      score: result.excerpts.length * 10 + metadataMatches * 5 + (workflowShaped ? 15 : 0),
+    };
+  });
+
+  return [...playbookResults, ...skillResults]
+    .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name))
+    .slice(0, 12);
+}
+
 // ---------------------------------------------------------------------------
 // Skill summary (first meaningful line)
 // ---------------------------------------------------------------------------
@@ -247,6 +346,8 @@ export {
   findPlaybook,
   searchSkills,
   searchPlaybooks,
+  searchClawskills,
+  getPlaybookMetadata,
   skillSummary,
 };
 
@@ -329,6 +430,18 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         required: ["query"],
       },
     },
+    {
+      name: "search_clawskills",
+      description:
+        "Search across both skills and playbooks. For workflow-shaped queries, playbooks are ranked ahead of generic skill matches.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          query: { type: "string", description: "Search query, e.g. 'closed won onboarding', 'zendesk jira escalation', 'lead sync'" },
+        },
+        required: ["query"],
+      },
+    },
   ],
 }));
 
@@ -337,6 +450,7 @@ const GetSkillSchema = z.object({ name: z.string(), section: z.string().optional
 const GetPlaybookSchema = z.object({ name: z.string() });
 const SearchSkillsSchema = z.object({ query: z.string() });
 const SearchPlaybooksSchema = z.object({ query: z.string() });
+const SearchClawskillsSchema = z.object({ query: z.string() });
 
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: args } = request.params;
@@ -450,6 +564,28 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       .join("\n\n---\n\n");
 
     return { content: [{ type: "text", text: `Playbook search results for "${query}":\n\n${output}` }] };
+  }
+
+  if (name === "search_clawskills") {
+    const parsed = SearchClawskillsSchema.safeParse(args);
+    if (!parsed.success) {
+      return { content: [{ type: "text", text: `Invalid arguments: ${parsed.error.message}` }], isError: true };
+    }
+    const { query } = parsed.data;
+    const results = searchClawskills(skills, playbooks, query);
+
+    if (results.length === 0) {
+      return { content: [{ type: "text", text: `No results found for "${query}".` }] };
+    }
+
+    const output = results
+      .map(({ name: itemName, contentType, excerpts }) => {
+        const blocks = excerpts.map((e, i) => `--- match ${i + 1} ---\n${e}`).join("\n\n");
+        return `### [${contentType}] ${itemName}\n\n${blocks}`;
+      })
+      .join("\n\n---\n\n");
+
+    return { content: [{ type: "text", text: `Unified search results for "${query}":\n\n${output}` }] };
   }
 
   return { content: [{ type: "text", text: `Unknown tool: ${name}` }], isError: true };

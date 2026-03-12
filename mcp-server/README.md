@@ -49,6 +49,9 @@ docker run --rm -i clawskills-mcp
 | `list_playbooks` | List all available cross-tool workflow playbooks |
 | `get_playbook` | Fetch a full playbook by slug |
 | `search_playbooks` | Full-text search across all workflow playbooks |
+| `search_clawskills` | Unified search across both skills and playbooks |
+
+For most user queries, start with `search_clawskills`. It biases toward playbooks for workflow-shaped searches like `closed won onboarding`, `zendesk jira escalation`, or `lead sync`.
 
 ### `list_skills`
 
@@ -91,6 +94,14 @@ No arguments. Returns all available playbooks.
 | `query` | string | yes | Search string, e.g. `"idempotency"`, `"rollback"`, `"closed won"` |
 
 Returns matching excerpts (±3 lines of context) grouped by playbook, capped at 5 matches per playbook.
+
+### `search_clawskills`
+
+| Argument | Type | Required | Description |
+|----------|------|----------|-------------|
+| `query` | string | yes | Search string, e.g. `"closed won onboarding"`, `"zendesk jira escalation"`, `"lead sync"` |
+
+Returns combined results across skills and playbooks. Workflow-oriented queries rank playbooks ahead of generic skill matches.
 
 ---
 

@@ -14,6 +14,8 @@ import {
   findPlaybook,
   searchSkills,
   searchPlaybooks,
+  searchClawskills,
+  getPlaybookMetadata,
   skillSummary,
 } from "./index.js";
 
@@ -75,8 +77,8 @@ let tempPlaybooksDir: string;
 beforeAll(() => {
   tempDir = makeTempSkillsDir({ github: SAMPLE_CONTENT, salesforce: "# Salesforce\nCRM platform.\n## Overview\nSalesforce is a CRM." });
   tempPlaybooksDir = makeTempPlaybooksDir({
-    "zendesk-jira": "# Zendesk -> Jira\n\nEscalate bugs from support into engineering.\n\n## Idempotency\n\nUse zendesk:{ticket_id}.",
-    "hubspot-asana": "# HubSpot -> Asana\n\nCreate onboarding work from closed won deals.",
+    "zendesk-jira": "---\ntitle: Zendesk -> Jira\nsystems:\n  - zendesk\n  - jira\ntags:\n  - support\n  - escalation\ntrigger_type: webhook\n---\n# Zendesk -> Jira\n\nEscalate bugs from support into engineering.\n\n## Idempotency\n\nUse zendesk:{ticket_id}.",
+    "hubspot-asana": "---\ntitle: HubSpot -> Asana\nsystems:\n  - hubspot\n  - asana\ntags:\n  - onboarding\n  - handoff\ntrigger_type: webhook\n---\n# HubSpot -> Asana\n\nCreate onboarding work from closed won deals.",
   });
 });
 
@@ -284,6 +286,35 @@ describe("searchPlaybooks", () => {
     const results = searchPlaybooks(playbooks, "idempotency");
     expect(results.length).toBeGreaterThan(0);
     expect(results[0].name).toBe("zendesk-jira");
+  });
+});
+
+describe("getPlaybookMetadata", () => {
+  it("parses frontmatter metadata from playbooks", () => {
+    const playbooks = loadPlaybooks(tempPlaybooksDir);
+    const metadata = getPlaybookMetadata(playbooks.get("zendesk-jira")!);
+    expect(metadata.systems).toContain("zendesk");
+    expect(metadata.tags).toContain("escalation");
+    expect(metadata.triggerType).toBe("webhook");
+  });
+});
+
+describe("searchClawskills", () => {
+  it("prefers playbooks for workflow-shaped queries", () => {
+    const skills = new Map([["hubspot", "HubSpot CRM API.\nUse for contacts and deals."]]);
+    const playbooks = loadPlaybooks(tempPlaybooksDir);
+    const results = searchClawskills(skills, playbooks, "closed won onboarding");
+    expect(results.length).toBeGreaterThan(0);
+    expect(results[0].contentType).toBe("playbook");
+    expect(results[0].name).toBe("hubspot-asana");
+  });
+
+  it("still returns skill hits for non-workflow queries", () => {
+    const skills = loadSkills(tempDir);
+    const playbooks = loadPlaybooks(tempPlaybooksDir);
+    const results = searchClawskills(skills, playbooks, "Personal Access Token");
+    expect(results.length).toBeGreaterThan(0);
+    expect(results.some((result) => result.contentType === "skill" && result.name === "github")).toBe(true);
   });
 });
 

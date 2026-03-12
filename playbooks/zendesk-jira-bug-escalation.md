@@ -1,3 +1,17 @@
+---
+title: Zendesk Ticket -> Jira Bug Escalation
+systems:
+  - zendesk
+  - jira
+tags:
+  - support
+  - engineering
+  - escalation
+  - incident
+  - handoff
+trigger_type: webhook_or_incremental_sync
+---
+
 # Zendesk Ticket -> Jira Bug Escalation
 
 ## Goal

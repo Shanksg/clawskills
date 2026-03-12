@@ -1,3 +1,17 @@
+---
+title: Salesforce Lead -> HubSpot Contact Sync
+systems:
+  - salesforce
+  - hubspot
+tags:
+  - crm
+  - sync
+  - marketing
+  - lead
+  - revops
+trigger_type: scheduled_sync
+---
+
 # Salesforce Lead -> HubSpot Contact Sync
 
 ## Goal

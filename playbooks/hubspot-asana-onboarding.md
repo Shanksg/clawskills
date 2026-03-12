@@ -1,3 +1,17 @@
+---
+title: HubSpot Deal Won -> Asana Onboarding Kickoff
+systems:
+  - hubspot
+  - asana
+tags:
+  - crm
+  - onboarding
+  - handoff
+  - delivery
+  - revops
+trigger_type: webhook
+---
+
 # HubSpot Deal Won -> Asana Onboarding Kickoff
 
 ## Goal
