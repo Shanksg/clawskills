@@ -1,6 +1,6 @@
 # ServiceNow Skill
 
-> **Last validated:** 2026-02-19 | **API:** ServiceNow REST Table API + Attachment API | **Current release:** Yokohama (GA March 12, 2025)
+> **Last validated:** 2026-05-11 | **API:** ServiceNow REST Table API + Attachment API | **Current release:** Yokohama (GA March 12, 2025) — re-confirmed against docs.servicenow.com on 2026-05-11
 > **Base URL:** `https://{instance-name}.service-now.com/api/now/`
 > **Assumed product:** ITSM (Incident, Problem, Change, Request). All APIs are available on other ServiceNow apps using the same Table API pattern.
 >
