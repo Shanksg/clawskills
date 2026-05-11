@@ -1,6 +1,6 @@
 # HubSpot Skill
 
-> **Last validated:** 2026-02-19 | **API:** HubSpot CRM API v3 (date-based versioning e.g. `2025-09` rolling out in beta)
+> **Last validated:** 2026-05-11 | **API:** HubSpot CRM API v3 (date-based versioning GA — March 30, 2026)
 > **Base URL:** `https://api.hubapi.com/crm/v3/objects/{objectType}`
 > **Assumed products:** CRM (Contacts, Companies, Deals) + Marketing Hub + Sales Hub
 >
@@ -8,8 +8,8 @@
 > - Rate limits raised (Sep 2024): Pro/Enterprise burst = **190 req/10s** (was 150); Enterprise daily = **1M** (was 500k).
 > - CRM Search API max page size raised to **200 records** (was 100); rate limit raised to **5 req/s** (was 4).
 > - `X-HubSpot-RateLimit-Secondly` and `X-HubSpot-RateLimit-Secondly-Remaining` headers **deprecated** — use `X-HubSpot-RateLimit-Remaining` instead.
-> - Contact Lists API v1 sunset: **April 30, 2026** (endpoints return 404 after that date).
-> - New date-based API versioning (e.g. `2025-09`) rolling out in beta for CRM objects, properties, associations.
+> - Contact Lists API v1 **sunset April 30, 2026** — endpoints now return 404. Use the v3 Lists API.
+> - **Date-based API versioning is GA (March 30, 2026)** — pin a dated version by passing the version in the API path or version header per HubSpot's docs; unpinned calls follow the latest stable. The legacy `v3` path remains valid.
 
 ---
 

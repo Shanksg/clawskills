@@ -1,13 +1,16 @@
 # Jira Skill
 
-> **Last validated:** 2026-02-19 | **API:** Jira Cloud REST API v3
+> **Last validated:** 2026-05-11 | **API:** Jira Cloud REST API v3
 > **Base URL:** `https://{your-domain}.atlassian.net/rest/api/3/`
 > **Assumed product:** Jira Cloud (Software or Service Management). Note differences from Jira Data Center where applicable.
 >
 > **⚠️ Breaking changes in 2026:**
 > - `GET /rest/api/3/search` is **deprecated** — migrate to `POST /rest/api/3/search/jql` which uses `nextPageToken` pagination (see Recipe 2).
 > - Field configuration scheme APIs will be **removed July 2026** — avoid building on `fieldconfigurationscheme` endpoints.
-> - Atlassian Connect reaches **end of support December 2026** — migrate to Atlassian Forge for new apps.
+> - Atlassian Connect reaches **end of support December 2026** — migrate to Atlassian Forge for new apps. End of support for Atlassian Connect Express and Connect Spring Boot announced 2026-04-29.
+> - **Workflow admin APIs removed 2026-04-07:** the legacy `Get all workflows` and `Create workflow` endpoints have been removed. Use the newer paginated workflow APIs. Issue-level **transitions** (`POST /rest/api/3/issue/{key}/transitions`) are unaffected.
+> - `draft` parameters on workflow rule APIs **deprecated** (2026-04-20).
+> - Classic API token access for **Jira Product Discovery** deprecated (2026-04-30) — migrate to scoped tokens.
 
 ---
 

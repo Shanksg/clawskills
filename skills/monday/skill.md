@@ -1,8 +1,10 @@
 # Monday.com Skill
 
-> **Last validated:** 2026-02-19 | **API:** monday.com GraphQL API | **Current version:** `2026-01` (Jan 15, 2026)
+> **Last validated:** 2026-05-11 | **API:** monday.com GraphQL API | **Current version:** `2026-04` (April 1, 2026)
 > **Note:** monday.com uses GraphQL exclusively — not REST. All requests go to a single endpoint.
-> **Versions:** RC=`2026-04` | Current=`2026-01` | Maintenance=`2025-10` | Deprecated: `2025-01`, `2024-10` (routed to `2025-04` as of Feb 15, 2026)
+> **Versions:** RC=`2026-07` | Current=`2026-04` | Maintenance=`2026-01` | Deprecated: `2025-10`, `2025-01`, `2024-10` (routed to `2025-04` as of Feb 15, 2026)
+>
+> **⚠️ Changed 2026-04-01:** `2026-04` is now the stable Current version. If you were pinning `2026-01`, that version moved to Maintenance — bug fixes only, no new features. Plan migration before its deprecation window opens.
 
 ---
 
@@ -139,10 +141,10 @@ Authorization: Bearer {token}
 
 Or with API version header (recommended — always pin a specific version):
 ```
-API-Version: 2026-01
+API-Version: 2026-04
 ```
 
-> **Important:** Always pin a version header in production. Without it, requests default to `Current`, which changes quarterly and can break your integration. Current as of 2026-02-19: `2026-01`.
+> **Important:** Always pin a version header in production. Without it, requests default to `Current`, which changes quarterly and can break your integration. Current as of 2026-05-11: `2026-04`.
 
 ### OAuth 2.0 scopes (least privilege)
 
@@ -205,7 +207,7 @@ query {
 curl -s -X POST https://api.monday.com/v2 \
   -H "Authorization: Bearer $MONDAY_TOKEN" \
   -H "Content-Type: application/json" \
-  -H "API-Version: 2026-01" \
+  -H "API-Version: 2026-04" \
   -d '{
     "query": "mutation ($boardId: ID!, $groupId: String!, $itemName: String!, $colVals: JSON!) { create_item(board_id: $boardId, group_id: $groupId, item_name: $itemName, column_values: $colVals) { id name } }",
     "variables": {
