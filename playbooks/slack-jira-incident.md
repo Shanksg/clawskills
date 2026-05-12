@@ -43,7 +43,10 @@ Reaction-based triggers are the most reliable and lowest-friction; slash command
 
 1. Receive the inbound request — either a **Slack Events API event** (`reaction_added` or `message`) delivered as JSON with the event wrapped under an `event` object, OR a **Slash Command HTTP request** (separate endpoint, form-encoded body with `channel_id`, `user_id`, `text`, `trigger_id` at the top level — no `event` wrapper and no `event_id`). Both are signed by Slack; verify the request with `X-Slack-Signature` and `X-Slack-Request-Timestamp` (5-minute window).
 2. **Ack with HTTP 200 immediately after signature verification — on every delivery, not just retries.** Slack Events API enforces a 3-second response budget on first delivery and on retries; missing it causes Slack to redeliver the event and creates avoidable duplicate work. Hand the remaining steps off to an async worker / queue. If a retry header is present (`X-Slack-Retry-Num`), treat it as an expected duplicate signal — still ack 200 and let the dedupe step catch it. (Slash Command requests don't carry retries but still benefit from immediate ack so the user sees a fast response.)
-3. Build a deterministic correlation key: `slack:{team_id}:{channel_id}:{message_ts}`.
+3. Build a deterministic correlation key: `slack:{team_id}:{channel_id}:{ts}`. The `{ts}` source depends on the trigger:
+   - **`reaction_added`:** `event.item.ts` — the timestamp of the message that was reacted to.
+   - **`message`:** `event.ts` — the original message timestamp; for replies posted into a thread, prefer `event.thread_ts` so the key anchors to the parent message and all in-thread activity collapses to one issue.
+   - **Slash Command:** no inbound `message_ts` exists. Either (a) require the command be invoked from inside a thread and use `thread_ts` from the command payload, or (b — recommended default) the async worker first posts a bot anchor message via `chat.postMessage` and uses that posted message's `ts`. Option (b) requires no user training and gives the thread reply a natural place to land.
 4. Fetch the originating message and thread context via `conversations.history` (with `latest=ts`, `inclusive=true`, `limit=1`) and `conversations.replies` for thread.
 5. Resolve `permalink` for the message via `chat.getPermalink`.
 6. Search Jira for an existing issue carrying that correlation key (label or custom field). If found, skip creation and reuse the Jira key.
@@ -60,7 +63,7 @@ Reaction-based triggers are the most reliable and lowest-friction; slash command
 
 | Slack | Jira |
 |-------|------|
-| `event.item.channel` + `event.item.ts` (or slash command channel/ts) | correlation key in label / custom field |
+| Correlation source (varies by trigger): `reaction_added` → `event.item.channel` + `event.item.ts`; `message` → `event.channel` + `event.ts` (use `event.thread_ts` for in-thread replies); Slash Command → command payload `channel_id` + `ts` of the bot's anchor message (or `thread_ts` if invoked inside a thread) | correlation key `slack:{team_id}:{channel}:{ts}` stored in label / custom field |
 | message text (first sentence) | `summary` |
 | message text + thread replies + permalink | `description` — Jira Cloud REST v3 requires **ADF (Atlassian Document Format) JSON**; convert Slack text + thread replies into an ADF document (see `skills/jira/skill.md` § ADF) |
 | reactor user / slash command invoker | `reporter` (after Slack-user -> Atlassian-account-id mapping) |
