@@ -63,7 +63,7 @@ Reaction-based triggers are the most reliable and lowest-friction; slash command
 
 | Slack | Jira |
 |-------|------|
-| Correlation source (varies by trigger): `reaction_added` → `event.item.channel` + `event.item.ts`; `message` → `event.channel` + `event.ts` (use `event.thread_ts` for in-thread replies); Slash Command → command payload `channel_id` + `ts` of the bot's anchor message (or `thread_ts` if invoked inside a thread) | correlation key `slack:{team_id}:{channel}:{ts}` stored in label / custom field |
+| Correlation source (varies by trigger): `reaction_added` → `event.item.channel` + `event.item.ts`; `message` → `event.channel` + `event.ts` (use `event.thread_ts` for in-thread replies); Slash Command → command payload `channel_id` + `ts` of the bot's anchor message (or `thread_ts` if invoked inside a thread) | correlation key `slack:{team_id}:{channel_id}:{ts}` stored in label / custom field |
 | message text (first sentence) | `summary` |
 | message text + thread replies + permalink | `description` — Jira Cloud REST v3 requires **ADF (Atlassian Document Format) JSON**; convert Slack text + thread replies into an ADF document (see `skills/jira/skill.md` § ADF) |
 | reactor user / slash command invoker | `reporter` (after Slack-user -> Atlassian-account-id mapping) |
@@ -73,7 +73,7 @@ Reaction-based triggers are the most reliable and lowest-friction; slash command
 
 ## Idempotency
 
-- **Dedup key:** `slack:{team_id}:{channel_id}:{message_ts}` stored as a Jira label and/or a custom field for searchability.
+- **Dedup key:** `slack:{team_id}:{channel_id}:{ts}` (same format as the correlation key in Sequence step 3) stored as a Jira label and/or a custom field for searchability.
 - Slack delivers Events API events at least once. Dedupe at the edge using the **payload field `event_id`** (present in the JSON wrapper, not an HTTP header). Slash command requests have **no `event_id`** — dedupe those by correlation key alone. Always re-dedupe by correlation key immediately before the Jira create call.
 - If multiple users react with the trigger emoji on the same message, only the first reaction creates the issue; subsequent reactions are noops (or append a reactor list to the Jira issue).
 - Slash command invocations must check correlation by `channel_id + thread_ts` first to avoid duplicating during incidents.
