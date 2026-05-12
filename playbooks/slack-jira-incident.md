@@ -42,7 +42,7 @@ Reaction-based triggers are the most reliable and lowest-friction; slash command
 ## Sequence
 
 1. Receive the inbound request — either a **Slack Events API event** (`reaction_added` or `message`) delivered as JSON with the event wrapped under an `event` object, OR a **Slash Command HTTP request** (separate endpoint, form-encoded body with `channel_id`, `user_id`, `text`, `trigger_id` at the top level — no `event` wrapper and no `event_id`). Both are signed by Slack; verify the request with `X-Slack-Signature` and `X-Slack-Request-Timestamp` (5-minute window).
-2. If a retry header is present (`X-Slack-Retry-Num`), ack with 200 immediately and dedupe before doing work.
+2. **Ack with HTTP 200 immediately after signature verification — on every delivery, not just retries.** Slack Events API enforces a 3-second response budget on first delivery and on retries; missing it causes Slack to redeliver the event and creates avoidable duplicate work. Hand the remaining steps off to an async worker / queue. If a retry header is present (`X-Slack-Retry-Num`), treat it as an expected duplicate signal — still ack 200 and let the dedupe step catch it. (Slash Command requests don't carry retries but still benefit from immediate ack so the user sees a fast response.)
 3. Build a deterministic correlation key: `slack:{team_id}:{channel_id}:{message_ts}`.
 4. Fetch the originating message and thread context via `conversations.history` (with `latest=ts`, `inclusive=true`, `limit=1`) and `conversations.replies` for thread.
 5. Resolve `permalink` for the message via `chat.getPermalink`.
