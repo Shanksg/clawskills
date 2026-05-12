@@ -41,7 +41,7 @@ Reaction-based triggers are the most reliable and lowest-friction; slash command
 
 ## Sequence
 
-1. Receive Slack event (`reaction_added`, `slash_command`, or `message`). Verify request signature using `X-Slack-Signature` and `X-Slack-Request-Timestamp` (5-minute window).
+1. Receive the inbound request — either a **Slack Events API event** (`reaction_added` or `message`) delivered as JSON with the event wrapped under an `event` object, OR a **Slash Command HTTP request** (separate endpoint, form-encoded body with `channel_id`, `user_id`, `text`, `trigger_id` at the top level — no `event` wrapper and no `event_id`). Both are signed by Slack; verify the request with `X-Slack-Signature` and `X-Slack-Request-Timestamp` (5-minute window).
 2. If a retry header is present (`X-Slack-Retry-Num`), ack with 200 immediately and dedupe before doing work.
 3. Build a deterministic correlation key: `slack:{team_id}:{channel_id}:{message_ts}`.
 4. Fetch the originating message and thread context via `conversations.history` (with `latest=ts`, `inclusive=true`, `limit=1`) and `conversations.replies` for thread.
@@ -62,7 +62,7 @@ Reaction-based triggers are the most reliable and lowest-friction; slash command
 |-------|------|
 | `event.item.channel` + `event.item.ts` (or slash command channel/ts) | correlation key in label / custom field |
 | message text (first sentence) | `summary` |
-| message text + thread replies + permalink | `description` (use ADF or markdown depending on Jira API mode) |
+| message text + thread replies + permalink | `description` — Jira Cloud REST v3 requires **ADF (Atlassian Document Format) JSON**; convert Slack text + thread replies into an ADF document (see `skills/jira/skill.md` § ADF) |
 | reactor user / slash command invoker | `reporter` (after Slack-user -> Atlassian-account-id mapping) |
 | channel name or category | `components` or labels |
 | keyword/severity from text | `priority` (P1/P2/P3) |
@@ -71,7 +71,7 @@ Reaction-based triggers are the most reliable and lowest-friction; slash command
 ## Idempotency
 
 - **Dedup key:** `slack:{team_id}:{channel_id}:{message_ts}` stored as a Jira label and/or a custom field for searchability.
-- Slack delivers events at least once. Always dedupe by `event_id` (header) at the edge AND by correlation key before Jira create.
+- Slack delivers Events API events at least once. Dedupe at the edge using the **payload field `event_id`** (present in the JSON wrapper, not an HTTP header). Slash command requests have **no `event_id`** — dedupe those by correlation key alone. Always re-dedupe by correlation key immediately before the Jira create call.
 - If multiple users react with the trigger emoji on the same message, only the first reaction creates the issue; subsequent reactions are noops (or append a reactor list to the Jira issue).
 - Slash command invocations must check correlation by `channel_id + thread_ts` first to avoid duplicating during incidents.
 
