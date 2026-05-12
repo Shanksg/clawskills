@@ -11,6 +11,7 @@ playbooks/
 ├── INDEX.md                 ← Workflow-level guides spanning multiple tools
 ├── hubspot-asana-onboarding.md
 ├── salesforce-hubspot-lead-sync.md
+├── slack-jira-incident.md
 └── zendesk-jira-bug-escalation.md
 
 skills/

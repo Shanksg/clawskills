@@ -9,6 +9,7 @@ Workflow playbooks are end-to-end guides for multi-system automations. They comp
 | [Zendesk Ticket -> Jira Bug escalation](./zendesk-jira-bug-escalation.md) | Zendesk, Jira | Escalate support-confirmed defects into engineering workflow |
 | [HubSpot Deal Won -> Asana onboarding kickoff](./hubspot-asana-onboarding.md) | HubSpot, Asana | Start implementation or onboarding work when a deal closes |
 | [Salesforce Lead -> HubSpot Contact sync](./salesforce-hubspot-lead-sync.md) | Salesforce, HubSpot | Mirror new/updated leads into marketing automation without duplicates |
+| [Slack Incident -> Jira Issue](./slack-jira-incident.md) | Slack, Jira | Convert in-chat incident escalations into tracked engineering work items |
 
 ## Playbook template
 
@@ -25,7 +26,6 @@ Each playbook should define:
 
 ## Next candidates
 
-- Slack incident -> Jira issue
 - GitHub PR -> Slack notification
 - Zendesk -> Salesforce case sync
 - Stripe payment failed -> HubSpot task
