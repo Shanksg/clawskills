@@ -182,7 +182,7 @@ Each skill/recipe is scored on five dimensions (1–5 each):
   - HubSpot: https://developers.hubspot.com/changelog
   - ServiceNow: https://www.servicenow.com/docs/bundle/yokohama-release-notes/page/release-notes/family-release-notes.html (current named release; rotate URL on each new release)
   - Zendesk: https://developer.zendesk.com/api-reference/changelog/changelog/
-  - Asana: https://forum.asana.com/c/forum-en/api/api-change-log/204 (forum is the canonical source per Asana; `developers.asana.com/docs/change-log` is a pointer to it)
+  - Asana: https://forum.asana.com/c/forum-en/api/api-change-log/204 — Asana hosts their dated API changelog as a forum thread; the developer-portal page just redirects here
   - GitHub: https://github.blog/changelog/
   - Figma: https://www.figma.com/developers/api#changelog
   - Slack: https://api.slack.com/changelog
