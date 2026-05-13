@@ -175,14 +175,14 @@ Each skill/recipe is scored on five dimensions (1–5 each):
 - **Freshness pipeline:** Weekly cron checks `Last validated:` dates (see Priority 2 above).
 - **Live smoke tests:** Optional phase B — weekly auth + read tests against sandboxes.
 - **Breaking change monitoring:** Subscribe to each vendor's developer changelog:
-  - Monday: https://developer.monday.com/changelog
-  - Salesforce: https://help.salesforce.com/s/articleView?id=release-notes.salesforce_release_notes.htm
+  - Monday: https://developer.monday.com/api-reference/docs/api-versioning (versioning table) + https://developer.monday.com/changelog (entries)
+  - Salesforce: https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/rest_rns.htm — ⚠️ JS-rendered; WebFetch returns header only. Use a browser or a headless-browser tool to read.
   - Jira: https://developer.atlassian.com/cloud/jira/platform/changelog/
-  - Dynamics 365: https://learn.microsoft.com/en-us/dynamics365/release-plans/
+  - Dynamics 365: https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/web-api-versions (Web API version differences) + https://learn.microsoft.com/en-us/dynamics365/released-versions/microsoft-dataverse (weekly release notes)
   - HubSpot: https://developers.hubspot.com/changelog
-  - ServiceNow: https://developer.servicenow.com/dev.do
-  - Zendesk: https://developer.zendesk.com/api-reference/ticketing/introduction/#api-changelog
-  - Asana: https://developers.asana.com/docs/changelog
+  - ServiceNow: https://www.servicenow.com/docs/bundle/yokohama-release-notes/page/release-notes/family-release-notes.html (current named release; rotate URL on each new release)
+  - Zendesk: https://developer.zendesk.com/api-reference/changelog/changelog/
+  - Asana: https://forum.asana.com/c/forum-en/api/api-change-log/204 (forum is the canonical source per Asana; `developers.asana.com/docs/change-log` is a pointer to it)
   - GitHub: https://github.blog/changelog/
   - Figma: https://www.figma.com/developers/api#changelog
   - Slack: https://api.slack.com/changelog
