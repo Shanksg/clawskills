@@ -1,8 +1,12 @@
 # Salesforce Skill
 
-> **Last validated:** 2026-02-19 | **API:** Salesforce REST API + Bulk API v2 | **Version:** v66.0 (Spring '26)
+> **Last validated:** 2026-05-13 | **API:** Salesforce REST API + Bulk API v2 | **Version:** v67.0 (Summer '26)
 > **Assumed product:** Sales Cloud (CRM). Adjust object availability for other clouds.
-> **Version note:** v64.0 = Summer '25, v65.0 = Winter '26, v66.0 = Spring '26 (current). Use `/services/data/v66.0/` in all requests.
+> **Version note:** v64.0 = Summer '25, v65.0 = Winter '26, v66.0 = Spring '26, **v67.0 = Summer '26 (current GA)**. Examples in this doc reference `/services/data/v66.0/` — still fully supported under Salesforce's ~3-year API support window. New code should pin v67.0.
+>
+> **⚠️ Changed 2026-05-13:** Summer '26 / v67.0 reached production GA. A detailed delta review against the Summer '26 release notes has **not yet been performed** — the canonical release notes page (`help.salesforce.com/.../rn_api.htm`) is JS-rendered and unreadable by plain HTTP fetchers (issue https://github.com/Shanksg/clawskills/issues/12). v66.0 remains fully supported, so existing integrations are not at risk.
+>
+> **Source:** https://help.salesforce.com/s/articleView?id=release-notes.rn_api.htm&release=262&type=5 (Summer '26 / v67.0 API release notes; open in a real browser)
 
 ---
 
