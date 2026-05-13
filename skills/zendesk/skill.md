@@ -12,8 +12,9 @@
 > - **OAuth token TTL enforcement (live 2026-02-02, announced 2026-01-16):** global (external) OAuth clients now have default token expiration and must use the refresh-token flow. Long-lived tokens without a refresh path will start failing.
 > - **Apps `password` setting removed (live 2026-04-29):** Zendesk apps no longer accept a `password` value in installation settings.
 > - **`/api/v2/apps/locations/{app_location_id}` endpoint removed (live 2026-04-30):** migrate to the replacement listed in the Zendesk app framework docs.
-> - **Create Request endpoint (added 2026-03-10):** anonymous requests now go through an email verification workflow to reduce spam — adjust integrations that programmatically file requests on behalf of unauthenticated users.
-> - **Source:** https://developer.zendesk.com/api-reference/changelog/changelog/
+> - **Create Request endpoint `POST /api/v2/requests` (changed 2026-03-10):** anonymous requests now go through an email verification workflow to reduce spam — adjust integrations that programmatically file requests on behalf of unauthenticated users.
+>
+> **Source:** https://developer.zendesk.com/api-reference/changelog/changelog/
 
 ## What this skill enables
 

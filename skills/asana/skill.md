@@ -12,7 +12,8 @@
 > - **Custom Types in Memberships (2026-03-31):** memberships endpoints now support custom-type filters.
 > - **Goals API (2026-04-06):** goals now expose privacy settings, default access levels, and stories.
 > - **Enhanced filtering on the Search API (2026-04-06):** custom task types now usable as filter dimensions.
-> - **Source:** https://forum.asana.com/c/forum-en/api/api-change-log/204
+>
+> **Source:** https://forum.asana.com/c/forum-en/api/api-change-log/204
 
 ## What this skill enables
 
