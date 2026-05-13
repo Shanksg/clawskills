@@ -176,7 +176,7 @@ Each skill/recipe is scored on five dimensions (1–5 each):
 - **Live smoke tests:** Optional phase B — weekly auth + read tests against sandboxes.
 - **Breaking change monitoring:** Subscribe to each vendor's developer changelog:
   - Monday: https://developer.monday.com/api-reference/docs/api-versioning (versioning table) + https://developer.monday.com/changelog (entries)
-  - Salesforce: https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/rest_rns.htm — ⚠️ JS-rendered: the content body is injected client-side, so plain HTTP fetchers (curl, wget, GitHub Actions cron jobs without a JS engine) return only the page shell. Read it in a real browser, or use a headless-browser tool (Playwright/Puppeteer) — see issue #12.
+  - Salesforce: https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/rest_rns.htm — ⚠️ JS-rendered: the content body is injected client-side, so plain HTTP fetchers (curl, wget, GitHub Actions cron jobs without a JS engine) return only the page shell. Read it in a real browser, or use a headless-browser tool (Playwright/Puppeteer) — see https://github.com/Shanksg/clawskills/issues/12.
   - Jira: https://developer.atlassian.com/cloud/jira/platform/changelog/
   - Dynamics 365: https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/web-api-versions (Web API version differences) + https://learn.microsoft.com/en-us/dynamics365/released-versions/microsoft-dataverse (weekly release notes)
   - HubSpot: https://developers.hubspot.com/changelog
