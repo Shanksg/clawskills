@@ -1,8 +1,18 @@
 # Asana Skill
 
-> **Last validated:** 2026-02-19 | **API:** Asana REST API 1.0
+> **Last validated:** 2026-05-13 | **API:** Asana REST API 1.0
 > **REST base URL:** `https://app.asana.com/api/1.0`
 > **Assumed product:** Asana cloud. Enterprise controls, SCIM, and admin APIs may require additional scopes and plan-specific access.
+>
+> **⚠️ Changes since 2026-02-19:**
+> - **Out of Office API (2026-04-27):** new endpoints replace the legacy `vacation_dates` field, which is now **deprecated** on the user object. Migrate any code that reads/writes `vacation_dates`.
+> - **RBAC Role API (2026-02-27):** new CRUD endpoints for managing custom roles on Enterprise plans.
+> - **Timesheet Approval Status API (2026-03-20)** and **Categories for Time Tracking Entries (2026-04-01):** new time-tracking primitives — useful for ops/finance workflows.
+> - **Project portfolio + advanced project search APIs (2026-03-23):** new endpoints for portfolio settings and advanced project filtering.
+> - **Custom Types in Memberships (2026-03-31):** memberships endpoints now support custom-type filters.
+> - **Goals API (2026-04-06):** goals now expose privacy settings, default access levels, and stories.
+> - **Enhanced filtering on the Search API (2026-04-06):** custom task types now usable as filter dimensions.
+> - **Source:** https://forum.asana.com/c/forum-en/api/api-change-log/204
 
 ## What this skill enables
 
