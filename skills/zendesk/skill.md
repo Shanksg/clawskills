@@ -1,12 +1,20 @@
 # Zendesk Skill
 
-> **Last validated:** 2026-02-19 | **API:** Zendesk Support REST API v2
+> **Last validated:** 2026-05-13 | **API:** Zendesk Support REST API v2
 > **Base URL:** `https://{subdomain}.zendesk.com/api/v2/`
 >
 > **⚠️ Breaking changes since 2024:**
 > - OAuth **implicit grant** and **password grant** flows **deprecated as of February 17, 2025** — use Authorization Code grant only.
 > - `www.zopim.com/api/v2` (legacy Zopim Chat REST API) **retired February 28, 2025** — use `{subdomain}.zendesk.com/api/v2/chat` instead.
 > - Old-style HTTP Target webhooks are superseded by the Webhooks API (`/api/v2/webhooks`) — migrate any remaining HTTP targets.
+>
+> **⚠️ Recently enforced deprecations + new in 2026 (dates per bullet):**
+> - **OAuth token TTL enforcement (live 2026-02-02, announced 2026-01-16):** global (external) OAuth clients now have default token expiration and must use the refresh-token flow. Long-lived tokens without a refresh path will start failing.
+> - **Apps `password` setting removed (live 2026-04-29):** Zendesk apps no longer accept a `password` value in installation settings.
+> - **`/api/v2/apps/locations/{app_location_id}` endpoint removed (live 2026-04-30):** migrate to the replacement listed in the Zendesk app framework docs.
+> - **Create Request endpoint `POST /api/v2/requests` (changed 2026-03-10):** anonymous requests now go through an email verification workflow to reduce spam — adjust integrations that programmatically file requests on behalf of unauthenticated users.
+>
+> **Source:** https://developer.zendesk.com/api-reference/changelog/changelog/
 
 ## What this skill enables
 
