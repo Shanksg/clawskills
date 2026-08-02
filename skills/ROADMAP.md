@@ -19,7 +19,7 @@ This skill set enables end-to-end automation and integration across the most com
 | Layer | Status |
 |-------|--------|
 | **14 skill docs** — Monday.com, Salesforce, Jira, Dynamics 365, HubSpot, ServiceNow, Zendesk, Asana, GitHub, Figma, Slack, Stripe, Notion, Linear | ✅ Live |
-| **MCP server** — `clawskills-mcp` v0.6.0 on npm; `list_skills`, `get_skill`, `search_skills` | ✅ Live |
+| **MCP server** — `clawskills-mcp` v0.7.0 on npm; `list_skills`, `get_skill`, `search_skills` | ✅ Live |
 | **CI pipeline** — build + test on every push/PR via `ci.yml` | ✅ Live |
 | **Release automation** — `release.yml` workflow_dispatch → release PR; `publish.yml` on merge → tag + npm publish via OIDC | ✅ Live |
 | **Test suite** — Vitest unit tests + real-skills validation (required sections, ≥5 KB, all 14 tools) | ✅ Live |
@@ -83,7 +83,7 @@ The repo now needs tighter alignment between the canonical `skills/` directory, 
 | Channel | Status | Next action |
 |---------|--------|-------------|
 | GitHub (public) | Ready to flip | Make repo public |
-| npm (`clawskills-mcp`) | ✅ Live — v0.6.0 | Maintain via `release.yml` |
+| npm (`clawskills-mcp`) | ✅ Live — v0.7.0 | Maintain via `release.yml` |
 | MCP registry listings | Not submitted | Submit to glama.ai, mcp.so, smithery.ai after public launch |
 | Docs website | Planned | Mintlify — fastest path to SEO-friendly browsable docs |
 | Lane A vs B | TBD | Revisit after first traction signals from public launch |
