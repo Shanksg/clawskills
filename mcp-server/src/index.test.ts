@@ -337,6 +337,29 @@ describe("skillSummary", () => {
     const summary = skillSummary("# Title\n## Subtitle\n");
     expect(summary).toBe("");
   });
+
+  it("uses the frontmatter title instead of the --- delimiter", () => {
+    const summary = skillSummary("---\ntitle: Slack Incident -> Jira Issue\nsystems:\n  - slack\n---\n\n# Heading\n\nBody text.");
+    expect(summary).toBe("Slack Incident -> Jira Issue");
+  });
+
+  it("falls through past frontmatter that has no title", () => {
+    const summary = skillSummary("---\nsystems:\n  - slack\n---\n\n# Heading\n\nBody text.");
+    expect(summary).toBe("Body text.");
+  });
+
+  it("strips the blockquote marker from skill headers", () => {
+    const summary = skillSummary("# Jira Skill\n\n> **Last validated:** 2026-08-02\n");
+    expect(summary).toBe("**Last validated:** 2026-08-02");
+  });
+
+  it("gives every real playbook a summary that is not the --- delimiter", () => {
+    for (const [slug, content] of loadPlaybooks(REAL_PLAYBOOKS_DIR)) {
+      const summary = skillSummary(content);
+      expect(summary, `${slug} has no usable summary`).not.toBe("");
+      expect(summary, `${slug} summary is the frontmatter delimiter`).not.toBe("---");
+    }
+  });
 });
 
 // ---------------------------------------------------------------------------

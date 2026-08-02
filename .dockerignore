@@ -1,0 +1,27 @@
+# Docker does not honour .gitignore, so mirror it here. Without this, locally
+# generated build artifacts (mcp-server/skills/, mcp-server/playbooks/, dist/)
+# get baked into the image and mask problems that only appear when building
+# from a clean clone — which is what CI and directory listings (Glama,
+# Smithery) actually do.
+node_modules/
+dist/
+build/
+
+mcp-server/node_modules/
+mcp-server/dist/
+mcp-server/skills/
+mcp-server/playbooks/
+
+.git/
+.github/
+.claude/
+
+.env
+.env.local
+.env.*.local
+
+.DS_Store
+*.log
+npm-debug.log*
+coverage/
+.nyc_output/

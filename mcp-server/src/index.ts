@@ -323,10 +323,27 @@ function searchClawskills(skills: Map<string, string>, playbooks: Map<string, st
 // Skill summary (first meaningful line)
 // ---------------------------------------------------------------------------
 
+// Playbooks open with a YAML frontmatter block; skills open with an H1 followed
+// by a blockquote. Without the frontmatter handling below, every playbook
+// summary came out as the literal "---" delimiter.
 function skillSummary(content: string): string {
-  for (const line of content.split("\n")) {
-    const trimmed = line.trim();
-    if (trimmed && !trimmed.startsWith("#")) return trimmed;
+  const lines = content.split("\n");
+  let start = 0;
+
+  if (lines[0]?.trim() === "---") {
+    const closing = lines.findIndex((line, i) => i > 0 && line.trim() === "---");
+    if (closing !== -1) {
+      for (const line of lines.slice(1, closing)) {
+        const title = line.match(/^title:\s*(.+)$/);
+        if (title) return title[1].trim().replace(/^["']|["']$/g, "");
+      }
+      start = closing + 1;
+    }
+  }
+
+  for (const line of lines.slice(start)) {
+    const trimmed = line.trim().replace(/^>\s*/, "");
+    if (trimmed && trimmed !== "---" && !trimmed.startsWith("#")) return trimmed;
   }
   return "";
 }
