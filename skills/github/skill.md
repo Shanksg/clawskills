@@ -499,14 +499,23 @@ resp.raise_for_status()
 run_id = resp.json()["workflow_run_id"]
 ```
 
-> **On older API versions** (`2022-11-28` and earlier) this endpoint returns `204 No Content` with no body. If you are still pinned there, dispatch as normal and then find the run by polling the runs list:
+> **On older API versions** (`2022-11-28` and earlier) this endpoint returns `204 No Content` with no body. Note that the shared `headers` dict used throughout this doc pins `2026-03-10`, so you only hit this path with an explicit override:
 > ```python
 > import time, requests
+>
+> legacy_headers = {**headers, "X-GitHub-Api-Version": "2022-11-28"}
+>
+> resp = requests.post(
+>     "https://api.github.com/repos/acme/api-service/actions/workflows/deploy.yml/dispatches",
+>     headers=legacy_headers,
+>     json={"ref": "main", "inputs": {"environment": "production"}}
+> )
+> resp.raise_for_status()   # 204 No Content — nothing to read from the body
 >
 > time.sleep(3)  # wait for the run to appear
 > runs = requests.get(
 >     "https://api.github.com/repos/acme/api-service/actions/workflows/deploy.yml/runs",
->     headers=headers,
+>     headers=legacy_headers,
 >     params={"event": "workflow_dispatch", "per_page": 5}
 > ).json()
 > run_id = runs["workflow_runs"][0]["id"]

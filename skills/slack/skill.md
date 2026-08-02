@@ -140,9 +140,22 @@ curl -s https://slack.com/api/auth.test \
 | `channels:manage` | Create/archive public channels |
 | `groups:write` | Create/archive private channels |
 | `team:read` | Get workspace info |
-| `search:read` | Search messages via `search.messages` (user token only) |
-| `search:read.public` / `search:read.files` / `search:read.users` | Granular search scopes for `assistant.search.context` (bot-accessible) |
-| `search:read.im` / `search:read.mpim` / `search:read.private` | Additional `assistant.search.context` scopes — user token only |
+
+Every scope above can be granted to a bot token (`xoxb-...`).
+
+### Search scopes (mixed token types — check before requesting)
+
+Search is the one area where bot and user tokens diverge, so these are listed separately rather than in the bot-token table above:
+
+| Scope | Method | Token type |
+|-------|--------|------------|
+| `search:read` | `search.messages` | **User token only** (`xoxp-...`) |
+| `search:read.public` | `assistant.search.context` | Bot or user |
+| `search:read.files` | `assistant.search.context` | Bot or user |
+| `search:read.users` | `assistant.search.context` | Bot or user |
+| `search:read.im` | `assistant.search.context` | **User token only** |
+| `search:read.mpim` | `assistant.search.context` | **User token only** |
+| `search:read.private` | `assistant.search.context` | **User token only** |
 
 > **⚠️ Changed 2026-02-17:** Slack shipped the Real-time Search API, so the old rule of thumb "bots cannot search" no longer holds.
 > - **`search.messages`** still requires a **user token** (`xoxp-...`) with `search:read`.
