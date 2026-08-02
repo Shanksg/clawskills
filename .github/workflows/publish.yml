@@ -1,0 +1,80 @@
+name: Publish
+
+# Stage 2 of 2. Fires when a version bump lands on main — normally by merging
+# the PR that release.yml opened. Tags the release and publishes to npm via
+# OIDC (no stored token).
+#
+# Tags are not branch-protected, so pushing the tag from CI is fine; only
+# pushes to main itself require a PR.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'mcp-server/package.json'
+  workflow_dispatch:
+
+permissions:
+  contents: write   # push the version tag
+  id-token: write   # OIDC npm publish
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # need tags to tell whether this version already shipped
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+
+      - name: Read version
+        id: version
+        run: echo "value=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+        working-directory: mcp-server
+
+      - name: Check whether this version was already released
+        id: check
+        run: |
+          if git rev-parse -q --verify "refs/tags/v${{ steps.version.outputs.value }}" >/dev/null; then
+            echo "Tag v${{ steps.version.outputs.value }} already exists — nothing to publish."
+            echo "needed=false" >> $GITHUB_OUTPUT
+          else
+            echo "needed=true" >> $GITHUB_OUTPUT
+          fi
+
+      # Everything below is skipped when package.json changed for a reason
+      # other than a version bump (a dependency change, say).
+
+      - name: Upgrade npm (OIDC trusted publishing requires npm 11.5.1+)
+        if: steps.check.outputs.needed == 'true'
+        run: npm install -g npm@latest
+        env:
+          NPM_CONFIG_USERCONFIG: /dev/null
+
+      - name: Build
+        if: steps.check.outputs.needed == 'true'
+        run: npm ci && npm run build
+        working-directory: mcp-server
+
+      - name: Test
+        if: steps.check.outputs.needed == 'true'
+        run: npm test
+        working-directory: mcp-server
+
+      - name: Tag the release
+        if: steps.check.outputs.needed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "v${{ steps.version.outputs.value }}"
+          git push origin "v${{ steps.version.outputs.value }}"
+
+      - name: Publish to npm
+        if: steps.check.outputs.needed == 'true'
+        run: npm publish --access public
+        working-directory: mcp-server
+        # No NODE_AUTH_TOKEN — OIDC handles auth automatically

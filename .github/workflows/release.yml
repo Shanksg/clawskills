@@ -1,5 +1,13 @@
 name: Release
 
+# Stage 1 of 2. This workflow only opens a release PR — it never pushes to main
+# and never publishes. Merging the PR it creates triggers publish.yml, which
+# tags the commit and publishes to npm.
+#
+# main is protected ("changes must be made through a pull request"), so the
+# previous design of committing the version bump directly to main could not
+# work; it failed at the push step with GH006 before reaching publish.
+
 on:
   workflow_dispatch:
     inputs:
@@ -14,34 +22,24 @@ on:
           - major
 
 permissions:
-  contents: write   # push version commit + tag
-  id-token: write   # OIDC npm publish
+  contents: write        # push the release branch
+  pull-requests: write   # open the release PR
 
 jobs:
-  release:
+  release-pr:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
-          registry-url: https://registry.npmjs.org
-
-      - name: Upgrade npm (OIDC trusted publishing requires npm 11.5.1+)
-        run: npm install -g npm@latest
-        env:
-          NPM_CONFIG_USERCONFIG: /dev/null
+          node-version: 24
 
       - name: Bump version in package.json
-        run: npm version ${{ inputs.bump }} --no-git-tag-version
-        working-directory: mcp-server
-
-      - name: Read new version
         id: version
-        run: echo "value=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+        run: |
+          npm version ${{ inputs.bump }} --no-git-tag-version
+          echo "value=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
         working-directory: mcp-server
 
       - name: Update ROADMAP.md version references
@@ -49,25 +47,30 @@ jobs:
           sed -i "s/\`clawskills-mcp\` v[0-9]*\.[0-9]*\.[0-9]*/\`clawskills-mcp\` v${{ steps.version.outputs.value }}/g" skills/ROADMAP.md
           sed -i "s/Live — v[0-9]*\.[0-9]*\.[0-9]*/Live — v${{ steps.version.outputs.value }}/g" skills/ROADMAP.md
 
-      - name: Commit and tag
+      - name: Open release PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.version.outputs.value }}
         run: |
+          BRANCH="release/v${VERSION}"
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH"
           git add mcp-server/package.json mcp-server/package-lock.json skills/ROADMAP.md
-          git commit -m "Bump version to ${{ steps.version.outputs.value }}"
-          git tag v${{ steps.version.outputs.value }}
-          git push origin main
-          git push origin v${{ steps.version.outputs.value }}
+          git commit -m "Bump version to ${VERSION}"
+          git push origin "$BRANCH"
 
-      - name: Build
-        run: npm ci && npm run build
-        working-directory: mcp-server
+          cat > /tmp/pr-body.md <<EOF
+          Automated release PR for \`clawskills-mcp\` v${VERSION}.
 
-      - name: Test
-        run: npm test
-        working-directory: mcp-server
+          Merging this triggers **Publish**, which tags \`v${VERSION}\` and publishes to npm via OIDC. Nothing is published until then.
 
-      - name: Publish to npm
-        run: npm publish --access public
-        working-directory: mcp-server
-        # No NODE_AUTH_TOKEN — OIDC handles auth automatically
+          - Bumps \`mcp-server/package.json\` to ${VERSION}
+          - Updates version references in \`skills/ROADMAP.md\`
+          EOF
+
+          gh pr create \
+            --base main \
+            --head "$BRANCH" \
+            --title "Release v${VERSION}" \
+            --body-file /tmp/pr-body.md

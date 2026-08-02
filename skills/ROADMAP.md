@@ -21,7 +21,7 @@ This skill set enables end-to-end automation and integration across the most com
 | **14 skill docs** — Monday.com, Salesforce, Jira, Dynamics 365, HubSpot, ServiceNow, Zendesk, Asana, GitHub, Figma, Slack, Stripe, Notion, Linear | ✅ Live |
 | **MCP server** — `clawskills-mcp` v0.6.0 on npm; `list_skills`, `get_skill`, `search_skills` | ✅ Live |
 | **CI pipeline** — build + test on every push/PR via `ci.yml` | ✅ Live |
-| **Release automation** — `release.yml` workflow_dispatch → bump, tag, npm publish via OIDC | ✅ Live |
+| **Release automation** — `release.yml` workflow_dispatch → release PR; `publish.yml` on merge → tag + npm publish via OIDC | ✅ Live |
 | **Test suite** — Vitest unit tests + real-skills validation (required sections, ≥5 KB, all 14 tools) | ✅ Live |
 | **Public repo readiness** — MIT license, `.gitignore`, full `package.json` metadata | ✅ Ready |
 
@@ -203,7 +203,9 @@ Each skill/recipe is scored on five dimensions (1–5 each):
 - PRs to `skill.md` files require: (a) reference to official doc, (b) tested curl/pseudocode example, (c) updated `Last validated:` date.
 - Branch convention: `skill/<toolname>` → PR → merge to main.
 - CI runs `npm test` on every PR — validates skill loads and has all required sections.
-- Releases: merge to main, then GitHub Actions → **Release** → Run workflow → pick `patch / minor / major`.
+- Releases (two stages — `main` is protected, so nothing can be pushed to it directly):
+  1. GitHub Actions → **Release** → Run workflow → pick `patch / minor / major`. Opens a `release/vX.Y.Z` PR with the version bump; publishes nothing.
+  2. Merge that PR. **Publish** tags `vX.Y.Z` and publishes to npm via OIDC.
 
 ---
 
