@@ -18,14 +18,14 @@ skills/
 ├── INDEX.md                 ← Start here: all tools, top workflows, quick-ref tables
 ├── ROADMAP.md               ← Phased build plan and governance model
 ├── monday/skill.md          ← Monday.com (GraphQL API v2026-01)
-├── salesforce/skill.md      ← Salesforce Sales Cloud (REST API v66.0)
+├── salesforce/skill.md      ← Salesforce Sales Cloud (REST API v67.0)
 ├── jira/skill.md            ← Jira Cloud (REST API v3)
 ├── dynamics365/skill.md     ← Microsoft Dynamics 365 (Dataverse Web API v9.2)
 ├── hubspot/skill.md         ← HubSpot CRM (API v3, 190 req/10s)
-├── servicenow/skill.md      ← ServiceNow (Yokohama release, Table API)
+├── servicenow/skill.md      ← ServiceNow (Australia release, Table API)
 ├── zendesk/skill.md         ← Zendesk Support (API v2)
 ├── asana/skill.md           ← Asana (REST API 1.0)
-├── github/skill.md          ← GitHub (REST API + GraphQL v4, 2022-11-28)
+├── github/skill.md          ← GitHub (REST API + GraphQL v4, 2026-03-10)
 ├── figma/skill.md           ← Figma (REST API v1, Webhooks V2)
 ├── slack/skill.md           ← Slack (Web API, Block Kit, Events API)
 ├── stripe/skill.md          ← Stripe (Payments API v2026-02-25, Billing, Connect)
@@ -356,12 +356,12 @@ Always pin API version headers where specified.
 
 Skills are validated against live API docs. Each doc has a `Last validated:` date in the header. Key things to watch:
 
-- **Monday.com** — new API version released every quarter; always pin `API-Version` header to `2026-01` (current) or check [developer.monday.com/api-reference/docs/api-versioning](https://developer.monday.com/api-reference/docs/api-versioning)
-- **Salesforce** — new API version each seasonal release (Spring/Summer/Winter); currently v66.0. Check `/services/data/` on your org for available versions.
+- **Monday.com** — new API version released every quarter; always pin `API-Version` header to `2026-07` (current) or check [developer.monday.com/api-reference/docs/api-versioning](https://developer.monday.com/api-reference/docs/api-versioning)
+- **Salesforce** — new API version each seasonal release (Spring/Summer/Winter); currently v67.0 (Summer '26). Check `/services/data/` on your org for available versions.
 - **Jira** — `GET /rest/api/3/search` is deprecated; use `POST /rest/api/3/search/jql`
-- **HubSpot** — date-based versioning (`2025-09` style) rolling out alongside v3; rate limits updated Sep 2024
-- **ServiceNow** — currently Yokohama release (March 2025); update URL bundle names on instance upgrade
-- **GitHub** — always pin `X-GitHub-Api-Version: 2022-11-28`; prefer fine-grained PATs over classic PATs; `GITHUB_TOKEN` in Actions is limited to 1,000 req/repo/hr
+- **HubSpot** — date-based versioning (`/YYYY-MM/` paths) GA since March 2026 alongside v3; rate limits updated Sep 2024
+- **ServiceNow** — currently Australia release (March 2026); update URL bundle names on instance upgrade
+- **GitHub** — always pin `X-GitHub-Api-Version: 2026-03-10` (26 breaking changes vs `2022-11-28`); prefer fine-grained PATs over classic PATs; `GITHUB_TOKEN` in Actions is limited to 1,000 req/repo/hr
 - **Figma** — `files:read` scope is deprecated; use granular scopes (`file_content:read`, `file_comments:write`, etc.); rate limits updated Nov 2025 and now vary by plan + seat type
 
 See [ROADMAP.md](skills/ROADMAP.md) for the full governance and update process.
@@ -380,4 +380,7 @@ To add or update a skill:
 6. Link to official sources in the `## Sources` section — no unverified claims.
 7. Open a PR — CI runs `npm test` which validates that your skill loads and has all required sections.
 
-**Releases** are automated: merge to `main`, then go to GitHub Actions → **Release** → Run workflow → pick `patch / minor / major`.
+**Releases** are automated in two stages, because `main` is protected and cannot be pushed to directly:
+
+1. GitHub Actions → **Release** → Run workflow → pick `patch / minor / major`. This opens a `release/vX.Y.Z` PR containing the version bump. Nothing is published yet.
+2. Merge that PR. **Publish** then tags `vX.Y.Z` and publishes to npm via OIDC.
