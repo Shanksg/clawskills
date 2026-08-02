@@ -382,5 +382,7 @@ To add or update a skill:
 
 **Releases** are automated in two stages, because `main` is protected and cannot be pushed to directly:
 
-1. GitHub Actions → **Release** → Run workflow → pick `patch / minor / major`. This opens a `release/vX.Y.Z` PR containing the version bump. Nothing is published yet.
-2. Merge that PR. **Publish** then tags `vX.Y.Z` and publishes to npm via OIDC.
+1. GitHub Actions → **Prepare Release** → Run workflow → pick `patch / minor / major`. This opens a `release/vX.Y.Z` PR containing the version bump. Nothing is published yet.
+2. Merge that PR. **Release** then publishes to npm via OIDC and tags `vX.Y.Z`.
+
+> `.github/workflows/release.yml` must keep that filename — npm's trusted publisher config pins the workflow filename.

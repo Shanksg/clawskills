@@ -1,76 +1,98 @@
 name: Release
 
-# Stage 1 of 2. This workflow only opens a release PR — it never pushes to main
-# and never publishes. Merging the PR it creates triggers publish.yml, which
-# tags the commit and publishes to npm.
+# Stage 2 of 2. Fires when a version bump lands on main — normally by merging
+# the PR that prepare-release.yml opened. Publishes to npm via OIDC (no stored
+# token), then tags the release.
 #
-# main is protected ("changes must be made through a pull request"), so the
-# previous design of committing the version bump directly to main could not
-# work; it failed at the push step with GH006 before reaching publish.
+# THIS FILE MUST STAY NAMED release.yml. npm's trusted publisher config for
+# clawskills-mcp pins the workflow filename, and it is set to release.yml.
+# Renaming this file breaks publishing with a 404 on PUT — which is exactly
+# what happened when the publish step lived in a file named publish.yml.
+#
+# Tags are not branch-protected, so pushing the tag from CI is fine; only
+# pushes to main itself require a PR.
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'mcp-server/package.json'
   workflow_dispatch:
-    inputs:
-      bump:
-        description: 'Version bump type'
-        required: true
-        default: 'patch'
-        type: choice
-        options:
-          - patch
-          - minor
-          - major
 
 permissions:
-  contents: write        # push the release branch
-  pull-requests: write   # open the release PR
+  contents: write   # push the version tag
+  id-token: write   # OIDC npm publish
 
 jobs:
-  release-pr:
+  publish:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # need tags to tell whether this version already shipped
 
       - uses: actions/setup-node@v4
         with:
           node-version: 24
+          registry-url: https://registry.npmjs.org
 
-      - name: Bump version in package.json
+      - name: Read version
         id: version
-        run: |
-          npm version ${{ inputs.bump }} --no-git-tag-version
-          echo "value=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+        run: echo "value=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
         working-directory: mcp-server
 
-      - name: Update ROADMAP.md version references
+      # The registry is the source of truth for "already published", not the
+      # git tag. Gating on the tag meant a publish that failed after tagging
+      # could never be retried — the leftover tag suppressed every rerun.
+      - name: Check whether this version is already on npm
+        id: check
         run: |
-          sed -i "s/\`clawskills-mcp\` v[0-9]*\.[0-9]*\.[0-9]*/\`clawskills-mcp\` v${{ steps.version.outputs.value }}/g" skills/ROADMAP.md
-          sed -i "s/Live — v[0-9]*\.[0-9]*\.[0-9]*/Live — v${{ steps.version.outputs.value }}/g" skills/ROADMAP.md
+          VERSION="${{ steps.version.outputs.value }}"
+          if npm view "clawskills-mcp@${VERSION}" version >/dev/null 2>&1; then
+            echo "clawskills-mcp@${VERSION} is already published — nothing to do."
+            echo "needed=false" >> $GITHUB_OUTPUT
+          else
+            echo "clawskills-mcp@${VERSION} is not on npm — publishing."
+            echo "needed=true" >> $GITHUB_OUTPUT
+          fi
 
-      - name: Open release PR
+      # Everything below is skipped when package.json changed for a reason
+      # other than a version bump (a dependency change, say).
+
+      - name: Upgrade npm (OIDC trusted publishing requires npm 11.5.1+)
+        if: steps.check.outputs.needed == 'true'
+        run: npm install -g npm@latest
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VERSION: ${{ steps.version.outputs.value }}
+          NPM_CONFIG_USERCONFIG: /dev/null
+
+      - name: Build
+        if: steps.check.outputs.needed == 'true'
+        run: npm ci && npm run build
+        working-directory: mcp-server
+
+      - name: Test
+        if: steps.check.outputs.needed == 'true'
+        run: npm test
+        working-directory: mcp-server
+
+      - name: Publish to npm
+        if: steps.check.outputs.needed == 'true'
+        run: npm publish --access public
+        working-directory: mcp-server
+        # No NODE_AUTH_TOKEN — OIDC handles auth automatically
+
+      # Tag only after a successful publish, so the tag always means "this
+      # version is on npm". Tolerates an existing tag so a retry cannot fail
+      # here for a version that did publish.
+      - name: Tag the release
+        if: steps.check.outputs.needed == 'true'
         run: |
-          BRANCH="release/v${VERSION}"
+          VERSION="${{ steps.version.outputs.value }}"
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git checkout -b "$BRANCH"
-          git add mcp-server/package.json mcp-server/package-lock.json skills/ROADMAP.md
-          git commit -m "Bump version to ${VERSION}"
-          git push origin "$BRANCH"
-
-          cat > /tmp/pr-body.md <<EOF
-          Automated release PR for \`clawskills-mcp\` v${VERSION}.
-
-          Merging this triggers **Publish**, which tags \`v${VERSION}\` and publishes to npm via OIDC. Nothing is published until then.
-
-          - Bumps \`mcp-server/package.json\` to ${VERSION}
-          - Updates version references in \`skills/ROADMAP.md\`
-          EOF
-
-          gh pr create \
-            --base main \
-            --head "$BRANCH" \
-            --title "Release v${VERSION}" \
-            --body-file /tmp/pr-body.md
+          if git rev-parse -q --verify "refs/tags/v${VERSION}" >/dev/null; then
+            echo "Tag v${VERSION} already exists locally — skipping tag creation."
+          else
+            git tag "v${VERSION}"
+            git push origin "v${VERSION}" || echo "Tag push failed or tag already on remote; continuing."
+          fi
