@@ -409,7 +409,14 @@ def append_blocks(page_id: str, blocks: list, batch_size: int = 100) -> None:
 
 ```json
 {
-  "children": [ /* ... */ ],
+  "children": [
+    {
+      "type": "paragraph",
+      "paragraph": {
+        "rich_text": [{ "type": "text", "text": { "content": "Inserted after the target block." } }]
+      }
+    }
+  ],
   "position": {
     "type": "after_block",
     "after_block": { "id": "b5d8fd79-0000-0000-0000-000000000000" }

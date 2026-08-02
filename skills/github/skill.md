@@ -487,7 +487,7 @@ Those three fields are the entire body — there is no nested run object, and no
 **The same dispatch call in Python.** This is the request above, not a follow-up step — issue it once and read the run ID from its response:
 
 ```python
-import time, requests
+import requests
 
 resp = requests.post(
     "https://api.github.com/repos/acme/api-service/actions/workflows/deploy.yml/dispatches",
@@ -515,6 +515,8 @@ run_id = resp.json()["workflow_run_id"]
 
 **Poll run status until complete:**
 ```python
+import time, requests
+
 while True:
     run = requests.get(
         f"https://api.github.com/repos/{REPO}/actions/runs/{run_id}",
