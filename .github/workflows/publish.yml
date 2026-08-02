@@ -36,13 +36,18 @@ jobs:
         run: echo "value=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
         working-directory: mcp-server
 
-      - name: Check whether this version was already released
+      # The registry is the source of truth for "already published", not the
+      # git tag. Gating on the tag meant a publish that failed after tagging
+      # could never be retried — the leftover tag suppressed every rerun.
+      - name: Check whether this version is already on npm
         id: check
         run: |
-          if git rev-parse -q --verify "refs/tags/v${{ steps.version.outputs.value }}" >/dev/null; then
-            echo "Tag v${{ steps.version.outputs.value }} already exists — nothing to publish."
+          VERSION="${{ steps.version.outputs.value }}"
+          if npm view "clawskills-mcp@${VERSION}" version >/dev/null 2>&1; then
+            echo "clawskills-mcp@${VERSION} is already published — nothing to do."
             echo "needed=false" >> $GITHUB_OUTPUT
           else
+            echo "clawskills-mcp@${VERSION} is not on npm — publishing."
             echo "needed=true" >> $GITHUB_OUTPUT
           fi
 
@@ -65,16 +70,24 @@ jobs:
         run: npm test
         working-directory: mcp-server
 
-      - name: Tag the release
-        if: steps.check.outputs.needed == 'true'
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag "v${{ steps.version.outputs.value }}"
-          git push origin "v${{ steps.version.outputs.value }}"
-
       - name: Publish to npm
         if: steps.check.outputs.needed == 'true'
         run: npm publish --access public
         working-directory: mcp-server
         # No NODE_AUTH_TOKEN — OIDC handles auth automatically
+
+      # Tag only after a successful publish, so the tag always means "this
+      # version is on npm". Tolerates an existing tag so a retry cannot fail
+      # here for a version that did publish.
+      - name: Tag the release
+        if: steps.check.outputs.needed == 'true'
+        run: |
+          VERSION="${{ steps.version.outputs.value }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if git rev-parse -q --verify "refs/tags/v${VERSION}" >/dev/null; then
+            echo "Tag v${VERSION} already exists locally — skipping tag creation."
+          else
+            git tag "v${VERSION}"
+            git push origin "v${VERSION}" || echo "Tag push failed or tag already on remote; continuing."
+          fi
