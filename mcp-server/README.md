@@ -32,8 +32,9 @@ No install needed. Add this to your MCP client config:
 ### Via Docker
 
 ```bash
-# From repo root
-docker build -t clawskills-mcp -f mcp-server/Dockerfile .
+# From repo root — the build context must be the root, since the image
+# copies skills/ and playbooks/ from there.
+docker build -t clawskills-mcp .
 docker run --rm -i clawskills-mcp
 ```
 
