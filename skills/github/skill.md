@@ -470,12 +470,24 @@ curl -s -X POST "https://api.github.com/repos/acme/api-service/actions/workflows
       "triggered_by": "crm-automation"
     }
   }'
-# 200 OK on success, with the dispatched run in the body (API version 2026-03-10+)
 ```
 
-**Getting the run ID after dispatch.** Under `X-GitHub-Api-Version: 2026-03-10` the dispatch response is `200` and carries the run, so read it directly:
+Under `X-GitHub-Api-Version: 2026-03-10` this returns **`200`** with the run identifiers in the body:
+
+```json
+{
+  "workflow_run_id": 987654321,
+  "run_url": "https://api.github.com/repos/acme/api-service/actions/runs/987654321",
+  "html_url": "https://github.com/acme/api-service/actions/runs/987654321"
+}
+```
+
+Those three fields are the entire body — there is no nested run object, and no `status` or `conclusion`. To get run state, fetch `run_url` (see "Poll run status" below). `2026-03-10` also removed the `return_run_details` parameter that previously opted into this behaviour; run details are now always returned.
+
+**The same dispatch call in Python.** This is the request above, not a follow-up step — issue it once and read the run ID from its response:
+
 ```python
-import requests
+import time, requests
 
 resp = requests.post(
     "https://api.github.com/repos/acme/api-service/actions/workflows/deploy.yml/dispatches",
@@ -484,13 +496,10 @@ resp = requests.post(
 )
 resp.raise_for_status()
 
-run = resp.json()["workflow_run"]
-run_id = run["id"]
-run_status = run["status"]              # queued, in_progress, completed
-run_conclusion = run.get("conclusion")  # success, failure, cancelled
+run_id = resp.json()["workflow_run_id"]
 ```
 
-> **On older API versions** (`2022-11-28` and earlier) this endpoint returns `204 No Content` with no run ID. If you are still pinned there, fall back to polling the runs list:
+> **On older API versions** (`2022-11-28` and earlier) this endpoint returns `204 No Content` with no body. If you are still pinned there, dispatch as normal and then find the run by polling the runs list:
 > ```python
 > import time, requests
 >
@@ -502,7 +511,7 @@ run_conclusion = run.get("conclusion")  # success, failure, cancelled
 > ).json()
 > run_id = runs["workflow_runs"][0]["id"]
 > ```
-> The polling approach races if two dispatches land close together — another reason to move to `2026-03-10`.
+> This assumes the newest matching run is yours, which races if two dispatches land close together — another reason to move to `2026-03-10`.
 
 **Poll run status until complete:**
 ```python
