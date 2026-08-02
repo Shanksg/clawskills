@@ -1,8 +1,15 @@
 # Notion Skill
 
-> **Last validated:** 2026-03-02 | **API version:** `2025-09-03` (latest stable)
+> **Last validated:** 2026-08-02 | **API version:** `2026-03-11` (latest stable)
 > **REST base URL:** `https://api.notion.com/v1/`
-> **Assumed product:** Notion (cloud). The `Notion-Version: 2025-09-03` header is required on every request. This version introduced multi-source databases — see the Key concepts section for migration notes.
+> **Assumed product:** Notion (cloud). The `Notion-Version: 2026-03-11` header is required on every request.
+>
+> **⚠️ Breaking changes in `2026-03-11`** (released March 11, 2026 — previous stable was `2025-09-03`):
+> - **`archived` → `in_trash`** on pages, databases, blocks, and data sources, in both requests and responses. Any code reading `archived` or sending `{"archived": true}` must be updated.
+> - **Block positioning:** the flat `"after": "<block-id>"` parameter is replaced by a structured `position` object — see Recipe 5.
+> - **`transcription` block type renamed to `meeting_notes`**, along with its property object. Update block type checks.
+>
+> If you are still pinned to `2025-09-03`, that version keeps working, but every example below assumes `2026-03-11`.
 
 ---
 
@@ -61,9 +68,13 @@ In Notion, a "row" in a database is just a Page whose `parent` is the database. 
 | `"workspace"` | Top-level page in the workspace |
 | `"block_id"` | Page is embedded inside a block |
 
+### Version 2026-03-11 — trash, positioning, and meeting notes
+
+The current stable version renames `archived` to `in_trash` across pages, databases, blocks, and data sources; replaces the flat `after` block-insertion parameter with a `position` object (Recipe 5); and renames the `transcription` block type to `meeting_notes`. These are the only breaking changes — everything else in this doc is unchanged from `2025-09-03`.
+
 ### Version 2025-09-03 — multi-source databases
 
-Version `2025-09-03` introduced **multi-source databases** (databases that aggregate rows from multiple linked data sources). For single-source databases (the vast majority), nothing changes. If your database uses multiple data sources, creating pages requires a `data_source_id` in the parent object:
+Version `2025-09-03` introduced **multi-source databases** (databases that aggregate rows from multiple linked data sources), and that behaviour carries forward into `2026-03-11`. For single-source databases (the vast majority), nothing changes. If your database uses multiple data sources, creating pages requires a `data_source_id` in the parent object:
 
 ```json
 "parent": { "type": "data_source_id", "data_source_id": "the-source-uuid" }
@@ -140,7 +151,7 @@ When **writing** rich text, only `text.content` (and optionally `text.link.url` 
 ```bash
 curl https://api.notion.com/v1/users/me \
   -H "Authorization: Bearer secret_abc123..." \
-  -H "Notion-Version: 2025-09-03"
+  -H "Notion-Version: 2026-03-11"
 ```
 
 ### Integration capabilities
@@ -183,7 +194,7 @@ Use `access_token` as the Bearer token for all subsequent requests on behalf of 
 
 ```
 Authorization: Bearer <token>
-Notion-Version: 2025-09-03
+Notion-Version: 2026-03-11
 Content-Type: application/json   (for POST/PATCH)
 ```
 
@@ -196,7 +207,7 @@ Content-Type: application/json   (for POST/PATCH)
 ```bash
 curl -X POST https://api.notion.com/v1/pages \
   -H "Authorization: Bearer secret_..." \
-  -H "Notion-Version: 2025-09-03" \
+  -H "Notion-Version: 2026-03-11" \
   -H "Content-Type: application/json" \
   -d '{
     "parent": { "database_id": "your-database-uuid" },
@@ -245,7 +256,7 @@ DATABASE_ID = "your-database-uuid"
 
 headers = {
     "Authorization": f"Bearer {NOTION_TOKEN}",
-    "Notion-Version": "2025-09-03",
+    "Notion-Version": "2026-03-11",
     "Content-Type": "application/json",
 }
 
@@ -291,7 +302,7 @@ results = query_database(
 ```bash
 curl -X PATCH https://api.notion.com/v1/pages/page-uuid \
   -H "Authorization: Bearer secret_..." \
-  -H "Notion-Version: 2025-09-03" \
+  -H "Notion-Version: 2026-03-11" \
   -H "Content-Type: application/json" \
   -d '{
     "properties": {
@@ -306,7 +317,7 @@ To archive (move to trash) a page:
 ```bash
 curl -X PATCH https://api.notion.com/v1/pages/page-uuid \
   -H "Authorization: Bearer secret_..." \
-  -H "Notion-Version: 2025-09-03" \
+  -H "Notion-Version: 2026-03-11" \
   -H "Content-Type: application/json" \
   -d '{ "in_trash": true }'
 ```
@@ -394,7 +405,21 @@ def append_blocks(page_id: str, blocks: list, batch_size: int = 100) -> None:
         resp.raise_for_status()
 ```
 
-Use `"after": "block-uuid"` in the request body to insert at a specific position instead of at the end.
+**Inserting at a specific position.** As of `2026-03-11` the flat `after` string is replaced by a `position` object. Omitting `position` still appends to the end:
+
+```json
+{
+  "children": [ /* ... */ ],
+  "position": {
+    "type": "after_block",
+    "after_block": { "id": "b5d8fd79-0000-0000-0000-000000000000" }
+  }
+}
+```
+
+`position.type` accepts `after_block` (insert after the given block — the replacement for the old `after`), `start` (prepend to the parent), and `end` (append; the default).
+
+> **Pre-`2026-03-11`:** the equivalent request body was `{"after": "b5d8fd79-...", "children": [...]}`. The old form is rejected on `2026-03-11`.
 
 ---
 
@@ -488,7 +513,7 @@ pages = get_modified_pages("your-database-uuid", since)
 ```bash
 curl https://api.notion.com/v1/users \
   -H "Authorization: Bearer secret_..." \
-  -H "Notion-Version: 2025-09-03"
+  -H "Notion-Version: 2026-03-11"
 ```
 
 Response includes `type: "person"` (workspace members) and `type: "bot"` (integrations). The `person` type includes `person.email` only if your integration has the **Read user email addresses** capability.
@@ -618,7 +643,7 @@ def notion_request(method: str, url: str, **kwargs) -> dict:
     headers = kwargs.pop("headers", {})
     headers.update({
         "Authorization": f"Bearer {NOTION_TOKEN}",
-        "Notion-Version": "2025-09-03",
+        "Notion-Version": "2026-03-11",
         "Content-Type": "application/json",
     })
     for attempt in range(5):
@@ -688,7 +713,7 @@ def upsert_page(database_id: str, external_id: str, properties: dict) -> dict:
 | 400 | `invalid_request_url` | URL is malformed | Verify endpoint path and UUID format |
 | 400 | `invalid_request` | Operation not supported | Read the API docs for this endpoint |
 | 400 | `validation_error` | Parameter shape is wrong | Check `message` for the specific field; verify property type JSON |
-| 400 | `missing_version` | `Notion-Version` header absent | Add `Notion-Version: 2025-09-03` to all requests |
+| 400 | `missing_version` | `Notion-Version` header absent | Add `Notion-Version: 2026-03-11` to all requests |
 | 401 | `unauthorized` | Token invalid or expired | Verify token prefix (`secret_` or `ntn_`); check it wasn't revoked |
 | 403 | `restricted_resource` | Integration lacks capability | Add the required capability in notion.so/my-integrations |
 | 404 | `object_not_found` | Page/DB not found or not shared | Share the page/database with your integration in Notion UI |
@@ -782,7 +807,8 @@ All integration activity is visible in **Notion → Settings → Connections** (
 ## Sources
 
 - [Notion API Reference — Introduction](https://developers.notion.com/reference/intro)
-- [Notion Versioning (current: 2025-09-03)](https://developers.notion.com/reference/versioning)
+- [Notion Versioning (current: 2026-03-11)](https://developers.notion.com/reference/versioning)
+- [Upgrade Guide: 2026-03-11](https://developers.notion.com/docs/upgrade-guide-2026-03-11)
 - [Upgrade Guide: 2025-09-03](https://developers.notion.com/docs/upgrade-guide-2025-09-03)
 - [Authentication](https://developers.notion.com/reference/authentication)
 - [Create a Page](https://developers.notion.com/reference/post-page)

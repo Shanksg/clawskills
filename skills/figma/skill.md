@@ -1,8 +1,15 @@
 # Figma Skill Reference
 
-**Last validated:** 2026-02-22
+**Last validated:** 2026-08-02
 **API version:** REST API v1 (stable) | Webhooks V2 (stable) | Pin `X-Figma-Api-Version` not required — versioning is path-based (`/v1/`, `/v2/`)
 **Base URL:** `https://api.figma.com` (Government: `https://api.figma-gov.com`)
+
+> **New since 2026-02:**
+> - **Plan access tokens — GA July 23, 2026.** Organization- and Enterprise-plan tokens that are **not tied to an individual user account**, with expiry up to one year and optional allowlists, managed by plan admins. This is now the recommended credential for CI/CD and org automation — it survives the token owner leaving the company, which personal access tokens do not. See Authentication below.
+> - **oEmbed API — March 25, 2026.** `oEmbed 1.0`-spec endpoint returning metadata for Figma files and published Makes. Requires the `file_metadata:read` scope.
+> - **AI Usage API — June 12, 2026.** Enterprise-only endpoint returning per-user, per-day AI credit usage. Requires the `org:ai_metering_usage_read` scope and a plan access token.
+>
+> **Docs moved:** the developer docs are now at `developers.figma.com/docs/rest-api/`; the old `figma.com/developers/api` URL redirects there.
 
 > **Breaking changes to be aware of:**
 > - **Nov 17, 2025** — New tiered rate limits in effect; rate limits now vary by plan (Starter/Professional/Organization/Enterprise) and seat type (View/Collab vs Dev/Full).
@@ -90,7 +97,18 @@ Variables are scoped to a collection. Types: `BOOLEAN`, `COLOR`, `FLOAT`, `STRIN
 
 ## Authentication & permissions
 
-### Option 1 — Personal Access Token (PAT) [recommended for server-to-server]
+### Option 1 — Plan access token [recommended for org automation and CI/CD, GA 2026-07-23]
+
+Organization- and Enterprise-plan only. Created and managed by plan admins, **not tied to a user account**, so the token keeps working when the person who created it leaves. Supports expiry up to one year and optional allowlists restricting where it can be used.
+
+```bash
+curl https://api.figma.com/v1/me \
+  -H "X-Figma-Token: YOUR_PLAN_ACCESS_TOKEN"
+```
+
+Same `X-Figma-Token` header as a PAT — only the provenance and lifecycle differ. Prefer this over a PAT for anything running unattended: a PAT dies with its owner's account, which is the most common cause of silently broken Figma automations.
+
+### Option 2 — Personal Access Token (PAT) [scripts and local tooling]
 
 Generate at **Figma → Account Settings → Personal access tokens**.
 Set an expiry (required since 2024) and select scopes at creation time.
@@ -100,7 +118,9 @@ curl https://api.figma.com/v1/me \
   -H "X-Figma-Token: YOUR_PAT"
 ```
 
-### Option 2 — OAuth 2.0 [recommended for user-facing apps]
+> On Organization/Enterprise plans, use a plan access token for shared automation and keep PATs for individual development work.
+
+### Option 3 — OAuth 2.0 [recommended for user-facing apps]
 
 **Authorization URL:**
 ```

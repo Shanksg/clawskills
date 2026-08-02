@@ -177,16 +177,17 @@ Each skill/recipe is scored on five dimensions (1–5 each):
 - **Breaking change monitoring:** Subscribe to each vendor's developer changelog:
   - Monday: https://developer.monday.com/api-reference/docs/api-versioning (versioning table) + https://developer.monday.com/changelog (entries)
   - Salesforce: https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/rest_rns.htm — ⚠️ JS-rendered: the content body is injected client-side, so plain HTTP fetchers (curl, wget, GitHub Actions cron jobs without a JS engine) return only the page shell. Read it in a real browser, or use a headless-browser tool (Playwright/Puppeteer) — see https://github.com/Shanksg/clawskills/issues/12.
+    - **Workaround (found 2026-08-02):** https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/resources_versions.htm **is** plain-fetchable and lists the highest published API version with its release name. That covers "did a new version ship?" — the most common freshness question — without a browser. Only the delta review still needs one.
   - Jira: https://developer.atlassian.com/cloud/jira/platform/changelog/
   - Dynamics 365: https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/web-api-versions (Web API version differences) + https://learn.microsoft.com/en-us/dynamics365/released-versions/microsoft-dataverse (weekly release notes)
   - HubSpot: https://developers.hubspot.com/changelog
-  - ServiceNow: https://www.servicenow.com/docs/bundle/yokohama-release-notes/page/release-notes/family-release-notes.html (current named release; rotate URL on each new release)
+  - ServiceNow: https://www.servicenow.com/docs/bundle/australia-release-notes/page/release-notes/family-release-notes.html (current named release — rotate this URL on each new release; https://www.servicenow.com/docs/r/release-notes/available-versions.html lists which family is current)
   - Zendesk: https://developer.zendesk.com/api-reference/changelog/changelog/
   - Asana: https://forum.asana.com/c/forum-en/api/api-change-log/204 — Asana hosts their dated API changelog as a forum category (individual entries are threads under it); the developer-portal page just redirects here
-  - GitHub: https://github.blog/changelog/
-  - Figma: https://www.figma.com/developers/api#changelog
-  - Slack: https://api.slack.com/changelog
-  - Stripe: https://stripe.com/docs/changelog
+  - GitHub: https://github.blog/changelog/ (entries) + https://docs.github.com/en/rest/about-the-rest-api/breaking-changes (per-version breaking-change list — the fetchable source of truth for REST API versions)
+  - Figma: https://developers.figma.com/docs/rest-api/changelog/ (moved from `figma.com/developers/api#changelog`, which now redirects)
+  - Slack: https://docs.slack.dev/changelog (moved from `api.slack.com/changelog`, which now redirects)
+  - Stripe: https://docs.stripe.com/changelog (moved from `stripe.com/docs/changelog`, which now redirects)
   - Notion: https://developers.notion.com/page/changelog
   - Linear: https://linear.app/changelog
 

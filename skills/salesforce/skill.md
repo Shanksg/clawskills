@@ -1,12 +1,14 @@
 # Salesforce Skill
 
-> **Last validated:** 2026-05-13 | **API:** Salesforce REST API + Bulk API v2 | **Version:** v67.0 (Summer '26)
+> **Last validated:** 2026-08-02 | **API:** Salesforce REST API + Bulk API v2 | **Version:** v67.0 (Summer '26)
 > **Assumed product:** Sales Cloud (CRM). Adjust object availability for other clouds.
-> **Version note:** v64.0 = Summer '25, v65.0 = Winter '26, v66.0 = Spring '26, **v67.0 = Summer '26 (current GA)**. Examples in this doc reference `/services/data/v66.0/` — still fully supported under Salesforce's ~3-year API support window. New code should pin v67.0.
+> **Version note:** v64.0 = Summer '25, v65.0 = Winter '26, v66.0 = Spring '26, **v67.0 = Summer '26 (current GA)**. All examples in this doc pin `/services/data/v67.0/`. Older versions stay supported under Salesforce's ~3-year API support window.
 >
-> **⚠️ Changed 2026-05-13:** Summer '26 / v67.0 reached production GA. A detailed delta review against the Summer '26 release notes has **not yet been performed** — the canonical release notes page (`help.salesforce.com/.../rn_api.htm`) is JS-rendered and unreadable by plain HTTP fetchers (issue https://github.com/Shanksg/clawskills/issues/12). v66.0 remains fully supported, so existing integrations are not at risk.
+> **Re-confirmed 2026-08-02:** v67.0 is still the highest published REST API version — Winter '27 / v68.0 has not shipped yet. Verified against the [Versions resource doc](https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/resources_versions.htm), which **is** readable by plain HTTP fetchers, unlike the `help.salesforce.com` release-notes page (issue https://github.com/Shanksg/clawskills/issues/12). Use the versions doc for automated freshness checks and the release notes only for delta review in a browser.
 >
-> **Source:** https://help.salesforce.com/s/articleView?id=release-notes.rn_api.htm&release=262&type=5 (Summer '26 / v67.0 API release notes; open in a real browser)
+> **⚠️ Announced for Winter '27:** enforcement of the API traffic URL requirement (first introduced in Summer '25, repeatedly postponed) lands in Winter '27. If you still call org URLs that are not the My Domain / enhanced-domain form, fix that before v68.0. Separately, SOAP `login()` retires for API versions 31.0–64.0 in Summer '27 — not used by this doc, which is REST-only.
+>
+> **Sources:** [REST API versions](https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/resources_versions.htm) · [Summer '26 API release notes](https://help.salesforce.com/s/articleView?id=release-notes.rn_api.htm&release=262&type=5) (JS-rendered; open in a real browser)
 
 ---
 
@@ -149,13 +151,13 @@ curl -X POST https://login.salesforce.com/services/oauth2/token \
 BASE="https://yourorg.my.salesforce.com"
 TOKEN="your_access_token"
 
-curl -s -G "$BASE/services/data/v66.0/query" \
+curl -s -G "$BASE/services/data/v67.0/query" \
   --data-urlencode "q=SELECT Id, Email, Status FROM Lead WHERE Email = 'prospect@example.com' LIMIT 1" \
   -H "Authorization: Bearer $TOKEN"
 # Response: {"totalSize": 0, "done": true, "records": []}  → safe to create
 
 # Step 2 — create
-curl -s -X POST "$BASE/services/data/v66.0/sobjects/Lead" \
+curl -s -X POST "$BASE/services/data/v67.0/sobjects/Lead" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -182,7 +184,7 @@ curl -s -X POST "$BASE/services/data/v66.0/sobjects/Lead" \
 
 ```bash
 # Initial query (returns up to 2000 records by default; Salesforce caps at 2000 per page)
-curl -s -G "$BASE/services/data/v66.0/query" \
+curl -s -G "$BASE/services/data/v67.0/query" \
   --data-urlencode "q=SELECT Id, Name, StageName, Amount, CloseDate, Account.Name FROM Opportunity WHERE StageName = 'Proposal/Price Quote' AND CloseDate >= 2026-01-01 ORDER BY CloseDate ASC" \
   -H "Authorization: Bearer $TOKEN"
 
@@ -190,12 +192,12 @@ curl -s -G "$BASE/services/data/v66.0/query" \
 # {
 #   "totalSize": 5432,
 #   "done": false,
-#   "nextRecordsUrl": "/services/data/v66.0/query/01g...",
+#   "nextRecordsUrl": "/services/data/v67.0/query/01g...",
 #   "records": [...]
 # }
 
 # Paginate — follow nextRecordsUrl until done = true
-curl -s "$BASE/services/data/v66.0/query/01g..." \
+curl -s "$BASE/services/data/v67.0/query/01g..." \
   -H "Authorization: Bearer $TOKEN"
 ```
 
@@ -222,7 +224,7 @@ ORDER BY LastModifiedDate ASC
 ```bash
 OPP_ID="006..."
 
-curl -s -X PATCH "$BASE/services/data/v66.0/sobjects/Opportunity/$OPP_ID" \
+curl -s -X PATCH "$BASE/services/data/v67.0/sobjects/Opportunity/$OPP_ID" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -236,7 +238,7 @@ curl -s -X PATCH "$BASE/services/data/v66.0/sobjects/Opportunity/$OPP_ID" \
 **Upsert by external ID:**
 ```bash
 # Requires a custom External ID field on the object (e.g., External_ID__c)
-curl -s -X PATCH "$BASE/services/data/v66.0/sobjects/Opportunity/External_ID__c/EXT-1234" \
+curl -s -X PATCH "$BASE/services/data/v67.0/sobjects/Opportunity/External_ID__c/EXT-1234" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{ "StageName": "Negotiation/Review" }'
@@ -252,7 +254,7 @@ curl -s -X PATCH "$BASE/services/data/v66.0/sobjects/Opportunity/External_ID__c/
 **Goal:** Record a completed call as a Task linked to both a Contact and an Opportunity.
 
 ```bash
-curl -s -X POST "$BASE/services/data/v66.0/sobjects/Task" \
+curl -s -X POST "$BASE/services/data/v67.0/sobjects/Task" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -283,7 +285,7 @@ curl -s -X POST "$BASE/services/data/v66.0/sobjects/Task" \
 # Step 1 — upload file as ContentVersion
 BASE64_CONTENT=$(base64 -i proposal.pdf)
 
-curl -s -X POST "$BASE/services/data/v66.0/sobjects/ContentVersion" \
+curl -s -X POST "$BASE/services/data/v67.0/sobjects/ContentVersion" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d "{
@@ -296,7 +298,7 @@ curl -s -X POST "$BASE/services/data/v66.0/sobjects/ContentVersion" \
 # Response: {"id": "068...", "success": true}
 ```
 
-For files >25 MB, use the multipart upload endpoint (`/services/data/v66.0/sobjects/ContentVersion` with `multipart/form-data`).
+For files >25 MB, use the multipart upload endpoint (`/services/data/v67.0/sobjects/ContentVersion` with `multipart/form-data`).
 
 ---
 
@@ -305,7 +307,7 @@ For files >25 MB, use the multipart upload endpoint (`/services/data/v66.0/sobje
 **Goal:** Create a Contact and link it to an Account in a single HTTP round-trip.
 
 ```bash
-curl -s -X POST "$BASE/services/data/v66.0/composite" \
+curl -s -X POST "$BASE/services/data/v67.0/composite" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -313,7 +315,7 @@ curl -s -X POST "$BASE/services/data/v66.0/composite" \
     "compositeRequest": [
       {
         "method": "POST",
-        "url": "/services/data/v66.0/sobjects/Contact",
+        "url": "/services/data/v67.0/sobjects/Contact",
         "referenceId": "newContact",
         "body": {
           "FirstName": "Jane",
@@ -324,7 +326,7 @@ curl -s -X POST "$BASE/services/data/v66.0/composite" \
       },
       {
         "method": "POST",
-        "url": "/services/data/v66.0/sobjects/Task",
+        "url": "/services/data/v67.0/sobjects/Task",
         "referenceId": "welcomeTask",
         "body": {
           "Subject": "Welcome call",
@@ -348,7 +350,7 @@ Use `@{referenceId.field}` to pass results between steps.
 
 ```bash
 # Step 1 — create a bulk job
-curl -s -X POST "$BASE/services/data/v66.0/jobs/ingest" \
+curl -s -X POST "$BASE/services/data/v67.0/jobs/ingest" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -363,31 +365,31 @@ curl -s -X POST "$BASE/services/data/v66.0/jobs/ingest" \
 JOB_ID="7507..."
 
 # Step 2 — upload CSV data
-curl -s -X PUT "$BASE/services/data/v66.0/jobs/ingest/$JOB_ID/batches" \
+curl -s -X PUT "$BASE/services/data/v67.0/jobs/ingest/$JOB_ID/batches" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: text/csv" \
   --data-binary @leads.csv
 
 # Step 3 — close the job (triggers processing)
-curl -s -X PATCH "$BASE/services/data/v66.0/jobs/ingest/$JOB_ID" \
+curl -s -X PATCH "$BASE/services/data/v67.0/jobs/ingest/$JOB_ID" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"state": "UploadComplete"}'
 
 # Step 4 — poll job status until Complete or Failed
-curl -s "$BASE/services/data/v66.0/jobs/ingest/$JOB_ID" \
+curl -s "$BASE/services/data/v67.0/jobs/ingest/$JOB_ID" \
   -H "Authorization: Bearer $TOKEN"
 # state: InProgress → JobComplete
 
 # Step 5 — retrieve failed records
-curl -s "$BASE/services/data/v66.0/jobs/ingest/$JOB_ID/failedResults" \
+curl -s "$BASE/services/data/v67.0/jobs/ingest/$JOB_ID/failedResults" \
   -H "Authorization: Bearer $TOKEN"
 
 # Step 6 — retrieve successful and unprocessed records for reconciliation
-curl -s "$BASE/services/data/v66.0/jobs/ingest/$JOB_ID/successfulResults" \
+curl -s "$BASE/services/data/v67.0/jobs/ingest/$JOB_ID/successfulResults" \
   -H "Authorization: Bearer $TOKEN"
 
-curl -s "$BASE/services/data/v66.0/jobs/ingest/$JOB_ID/unprocessedRecords" \
+curl -s "$BASE/services/data/v67.0/jobs/ingest/$JOB_ID/unprocessedRecords" \
   -H "Authorization: Bearer $TOKEN"
 ```
 
@@ -521,7 +523,7 @@ Always filter on `LastModifiedDate` for incremental pulls. Store the max `LastMo
 | Enterprise | 1,000 per licensed user |
 | Unlimited | 5,000 per licensed user |
 
-Check remaining: `GET /services/data/v66.0/limits` → `DailyApiRequests`.
+Check remaining: `GET /services/data/v67.0/limits` → `DailyApiRequests`.
 
 ### Rate limit headers
 
@@ -597,10 +599,10 @@ Do NOT log: access tokens, `VersionData` (binary), field values that contain PII
 
 ## Testing checklist
 
-- [ ] **Auth test:** Exchange JWT for access token; call `GET /services/data/v66.0/` — returns API version list.
+- [ ] **Auth test:** Exchange JWT for access token; call `GET /services/data/v67.0/` — returns API version list.
 - [ ] **CRUD test:** Create a Lead → read by ID → update Status → delete (hard delete via `DELETE /sobjects/Lead/{id}`).
 - [ ] **SOQL pagination test:** Query an object with >2,000 records; follow `nextRecordsUrl` to completion; verify `totalSize` matches record count.
-- [ ] **Rate limit test:** Call `GET /services/data/v66.0/limits` and log `DailyApiRequests`; simulate limit approach with retries.
+- [ ] **Rate limit test:** Call `GET /services/data/v67.0/limits` and log `DailyApiRequests`; simulate limit approach with retries.
 - [ ] **Bulk API test:** Upload a 500-row CSV; poll job to completion; verify `numberRecordsProcessed` = 500; check `failedResults`.
 - [ ] **Upsert idempotency test:** Upsert same record twice with same External ID — verify second call updates rather than duplicates.
 - [ ] **Permission test:** Call with a token scoped to a user without Field-level access — verify affected fields return `null`.

@@ -1,6 +1,6 @@
 # Zendesk Skill
 
-> **Last validated:** 2026-05-13 | **API:** Zendesk Support REST API v2
+> **Last validated:** 2026-08-02 | **API:** Zendesk Support REST API v2
 > **Base URL:** `https://{subdomain}.zendesk.com/api/v2/`
 >
 > **⚠️ Breaking changes since 2024:**
@@ -13,6 +13,11 @@
 > - **Apps `password` setting removed (live 2026-04-29):** Zendesk apps no longer accept a `password` value in installation settings.
 > - **`/api/v2/apps/locations/{app_location_id}` endpoint removed (live 2026-04-30):** migrate to the replacement listed in the Zendesk app framework docs.
 > - **Create Request endpoint `POST /api/v2/requests` (changed 2026-03-10):** anonymous requests now go through an email verification workflow to reduce spam — adjust integrations that programmatically file requests on behalf of unauthenticated users.
+>
+> **Checked 2026-08-02 — no new Support API v2 breaking changes.** Changes since the last review affect adjacent products, not the Support endpoints used in this doc:
+> - **IT Asset Management (breaking 2026-08-06, announced 2026-07-06):** the `purchase_cost` field on assets becomes an object with `amount` and `currency` instead of a scalar. Only affects the ITAM Assets API.
+> - **AI Agents API (deprecation 2026-07-01, announced 2026-05-19):** the legacy `*.ultimate.ai` base URL is retired — use `{subdomain}.zendesk.com/ai-agents/api`.
+> - **Jira integration (2026-06-24):** Zendesk is delisting Jira Integration V2 and restoring the original version. Relevant to the [Zendesk → Jira bug escalation playbook](../../playbooks/zendesk-jira-bug-escalation.md), which uses the two products' REST APIs directly and is therefore unaffected by the marketplace app change.
 >
 > **Source:** https://developer.zendesk.com/api-reference/changelog/changelog/
 

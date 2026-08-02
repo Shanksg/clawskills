@@ -1,9 +1,18 @@
 # GitHub Skill
 
-> **Last validated:** 2026-02-22 | **API:** GitHub REST API + GraphQL API v4
+> **Last validated:** 2026-08-02 | **API:** GitHub REST API + GraphQL API v4
 > **REST base URL:** `https://api.github.com`
-> **API version header:** `X-GitHub-Api-Version: 2022-11-28` (current stable)
+> **API version header:** `X-GitHub-Api-Version: 2026-03-10` (current stable, released March 10, 2026)
 > **Assumed product:** GitHub.com (cloud). GitHub Enterprise Server differs in base URL and some rate limits.
+>
+> **⚠️ Changed 2026-03-10:** REST API version `2026-03-10` shipped 26 breaking changes. `2022-11-28` still works — GitHub supports each version for at least 24 months after a successor ships — but all examples in this doc are pinned to `2026-03-10`. Changes most likely to affect automation:
+> - **Issues/PRs:** the deprecated singular `assignee` field is removed from requests and responses. Use the `assignees` array (this doc already does).
+> - **Pull requests:** `merge_commit_sha` is removed from the PR object.
+> - **Workflow dispatch:** `POST .../dispatches` now returns `200` with run details instead of `204` with an empty body — you no longer have to poll for the run ID (see Recipe 7).
+> - **Rate limit endpoint:** the top-level `rate` property is gone; read `resources.core` instead.
+> - **Repository content:** submodules return `type: "submodule"` instead of `type: "file"`.
+> - **Code scanning:** the `javascript` and `typescript` enum values are merged into `javascript-typescript`.
+> - Removed elsewhere: `has_downloads` and `use_squash_pr_title_as_default` on repos, `authorizations_url`/`hub_url` from the API root, the `/hub` endpoint, and `bundle` from attestation list responses. Trade-control blocks now return `451` rather than `403`/`422`.
 
 ---
 
@@ -115,7 +124,7 @@ Fine-grained PATs are scoped to a single owner (user or org) and specific reposi
 ```bash
 curl -s https://api.github.com/repos/acme/api-service \
   -H "Authorization: Bearer github_pat_..." \
-  -H "X-GitHub-Api-Version: 2022-11-28" \
+  -H "X-GitHub-Api-Version: 2026-03-10" \
   -H "Accept: application/vnd.github+json"
 ```
 
@@ -152,7 +161,7 @@ GitHub Apps generate short-lived (1-hour) installation access tokens, making the
 curl -s -X POST \
   "https://api.github.com/app/installations/{installation_id}/access_tokens" \
   -H "Authorization: Bearer {jwt}" \
-  -H "X-GitHub-Api-Version: 2022-11-28" \
+  -H "X-GitHub-Api-Version: 2026-03-10" \
   -H "Accept: application/vnd.github+json"
 # Response: {"token": "ghs_...", "expires_at": "2026-02-22T15:00:00Z", ...}
 
@@ -165,7 +174,7 @@ curl -s https://api.github.com/repos/acme/api-service \
 
 ```
 Authorization: Bearer {token}
-X-GitHub-Api-Version: 2022-11-28
+X-GitHub-Api-Version: 2026-03-10
 Accept: application/vnd.github+json
 User-Agent: your-app-name/1.0    ← required; 403 without it
 ```
@@ -193,19 +202,19 @@ User-Agent: your-app-name/1.0    ← required; 403 without it
 ```bash
 BASE="https://api.github.com"
 REPO="acme/api-service"
-HEADERS='-H "Authorization: Bearer $GH_TOKEN" -H "X-GitHub-Api-Version: 2022-11-28" -H "Accept: application/vnd.github+json"'
+HEADERS='-H "Authorization: Bearer $GH_TOKEN" -H "X-GitHub-Api-Version: 2026-03-10" -H "Accept: application/vnd.github+json"'
 
 # Step 1 — get the SHA of main
 MAIN_SHA=$(curl -s "$BASE/repos/$REPO/git/ref/heads/main" \
   -H "Authorization: Bearer $GH_TOKEN" \
-  -H "X-GitHub-Api-Version: 2022-11-28" \
+  -H "X-GitHub-Api-Version: 2026-03-10" \
   -H "Accept: application/vnd.github+json" \
   | jq -r '.object.sha')
 
 # Step 2 — create the branch
 curl -s -X POST "$BASE/repos/$REPO/git/refs" \
   -H "Authorization: Bearer $GH_TOKEN" \
-  -H "X-GitHub-Api-Version: 2022-11-28" \
+  -H "X-GitHub-Api-Version: 2026-03-10" \
   -H "Accept: application/vnd.github+json" \
   -H "Content-Type: application/json" \
   -d "{\"ref\": \"refs/heads/feature/auto-update\", \"sha\": \"$MAIN_SHA\"}"
@@ -213,7 +222,7 @@ curl -s -X POST "$BASE/repos/$REPO/git/refs" \
 # Step 3 — open a PR
 curl -s -X POST "$BASE/repos/$REPO/pulls" \
   -H "Authorization: Bearer $GH_TOKEN" \
-  -H "X-GitHub-Api-Version: 2022-11-28" \
+  -H "X-GitHub-Api-Version: 2026-03-10" \
   -H "Accept: application/vnd.github+json" \
   -H "Content-Type: application/json" \
   -d '{
@@ -241,7 +250,7 @@ curl -s -X POST "$BASE/repos/$REPO/pulls" \
 # REST search endpoint
 curl -s -G "https://api.github.com/search/issues" \
   -H "Authorization: Bearer $GH_TOKEN" \
-  -H "X-GitHub-Api-Version: 2022-11-28" \
+  -H "X-GitHub-Api-Version: 2026-03-10" \
   -H "Accept: application/vnd.github+json" \
   --data-urlencode 'q=repo:acme/api-service is:issue is:open label:bug updated:>2026-02-15' \
   --data-urlencode 'sort=updated' \
@@ -262,7 +271,7 @@ curl -s -G "https://api.github.com/search/issues" \
 ```bash
 curl -s -G "https://api.github.com/repos/acme/api-service/issues" \
   -H "Authorization: Bearer $GH_TOKEN" \
-  -H "X-GitHub-Api-Version: 2022-11-28" \
+  -H "X-GitHub-Api-Version: 2026-03-10" \
   -H "Accept: application/vnd.github+json" \
   --data-urlencode 'state=open' \
   --data-urlencode 'labels=bug' \
@@ -283,7 +292,7 @@ ISSUE_NUMBER=142
 
 curl -s -X PATCH "https://api.github.com/repos/acme/api-service/issues/$ISSUE_NUMBER" \
   -H "Authorization: Bearer $GH_TOKEN" \
-  -H "X-GitHub-Api-Version: 2022-11-28" \
+  -H "X-GitHub-Api-Version: 2026-03-10" \
   -H "Accept: application/vnd.github+json" \
   -H "Content-Type: application/json" \
   -d '{
@@ -301,7 +310,7 @@ curl -s -X PATCH "https://api.github.com/repos/acme/api-service/issues/$ISSUE_NU
 ```bash
 curl -s -X POST "https://api.github.com/repos/acme/api-service/issues/$ISSUE_NUMBER/labels" \
   -H "Authorization: Bearer $GH_TOKEN" \
-  -H "X-GitHub-Api-Version: 2022-11-28" \
+  -H "X-GitHub-Api-Version: 2026-03-10" \
   -H "Accept: application/vnd.github+json" \
   -H "Content-Type: application/json" \
   -d '["needs-review", "P1"]'
@@ -316,7 +325,7 @@ curl -s -X POST "https://api.github.com/repos/acme/api-service/issues/$ISSUE_NUM
 ```bash
 curl -s -X POST "https://api.github.com/repos/acme/api-service/issues/142/comments" \
   -H "Authorization: Bearer $GH_TOKEN" \
-  -H "X-GitHub-Api-Version: 2022-11-28" \
+  -H "X-GitHub-Api-Version: 2026-03-10" \
   -H "Accept: application/vnd.github+json" \
   -H "Content-Type: application/json" \
   -d '{
@@ -350,7 +359,7 @@ TOKEN = "github_pat_..."
 
 headers = {
     "Authorization": f"Bearer {TOKEN}",
-    "X-GitHub-Api-Version": "2022-11-28",
+    "X-GitHub-Api-Version": "2026-03-10",
     "Accept": "application/vnd.github+json"
 }
 
@@ -396,7 +405,7 @@ print(resp.json()["commit"]["sha"])
 ```bash
 curl -s -X POST "https://api.github.com/repos/acme/api-service/hooks" \
   -H "Authorization: Bearer $GH_TOKEN" \
-  -H "X-GitHub-Api-Version: 2022-11-28" \
+  -H "X-GitHub-Api-Version: 2026-03-10" \
   -H "Accept: application/vnd.github+json" \
   -H "Content-Type: application/json" \
   -d '{
@@ -450,7 +459,7 @@ if not verify_github_webhook(request.body, sig, WEBHOOK_SECRET):
 # workflow_dispatch — the workflow YAML must have `on: workflow_dispatch` defined
 curl -s -X POST "https://api.github.com/repos/acme/api-service/actions/workflows/deploy.yml/dispatches" \
   -H "Authorization: Bearer $GH_TOKEN" \
-  -H "X-GitHub-Api-Version: 2022-11-28" \
+  -H "X-GitHub-Api-Version: 2026-03-10" \
   -H "Accept: application/vnd.github+json" \
   -H "Content-Type: application/json" \
   -d '{
@@ -461,27 +470,39 @@ curl -s -X POST "https://api.github.com/repos/acme/api-service/actions/workflows
       "triggered_by": "crm-automation"
     }
   }'
-# 204 No Content on success (no run ID returned directly)
+# 200 OK on success, with the dispatched run in the body (API version 2026-03-10+)
 ```
 
-**Getting the run ID after dispatch** (there's no run ID in the 204 response — poll instead):
+**Getting the run ID after dispatch.** Under `X-GitHub-Api-Version: 2026-03-10` the dispatch response is `200` and carries the run, so read it directly:
 ```python
-import time, requests
+import requests
 
-# Wait a few seconds for the run to appear
-time.sleep(3)
-
-runs = requests.get(
-    "https://api.github.com/repos/acme/api-service/actions/workflows/deploy.yml/runs",
+resp = requests.post(
+    "https://api.github.com/repos/acme/api-service/actions/workflows/deploy.yml/dispatches",
     headers=headers,
-    params={"event": "workflow_dispatch", "per_page": 5}
-).json()
+    json={"ref": "main", "inputs": {"environment": "production"}}
+)
+resp.raise_for_status()
 
-latest_run = runs["workflow_runs"][0]
-run_id = latest_run["id"]
-run_status = latest_run["status"]   # queued, in_progress, completed
-run_conclusion = latest_run.get("conclusion")  # success, failure, cancelled
+run = resp.json()["workflow_run"]
+run_id = run["id"]
+run_status = run["status"]              # queued, in_progress, completed
+run_conclusion = run.get("conclusion")  # success, failure, cancelled
 ```
+
+> **On older API versions** (`2022-11-28` and earlier) this endpoint returns `204 No Content` with no run ID. If you are still pinned there, fall back to polling the runs list:
+> ```python
+> import time, requests
+>
+> time.sleep(3)  # wait for the run to appear
+> runs = requests.get(
+>     "https://api.github.com/repos/acme/api-service/actions/workflows/deploy.yml/runs",
+>     headers=headers,
+>     params={"event": "workflow_dispatch", "per_page": 5}
+> ).json()
+> run_id = runs["workflow_runs"][0]["id"]
+> ```
+> The polling approach races if two dispatches land close together — another reason to move to `2026-03-10`.
 
 **Poll run status until complete:**
 ```python
@@ -506,7 +527,7 @@ while True:
 ```bash
 curl -s -X POST "https://api.github.com/repos/acme/api-service/statuses/$COMMIT_SHA" \
   -H "Authorization: Bearer $GH_TOKEN" \
-  -H "X-GitHub-Api-Version: 2022-11-28" \
+  -H "X-GitHub-Api-Version: 2026-03-10" \
   -H "Accept: application/vnd.github+json" \
   -H "Content-Type: application/json" \
   -d '{
@@ -521,7 +542,7 @@ curl -s -X POST "https://api.github.com/repos/acme/api-service/statuses/$COMMIT_
 ```bash
 curl -s -X POST "https://api.github.com/repos/acme/api-service/check-runs" \
   -H "Authorization: Bearer $GH_TOKEN" \
-  -H "X-GitHub-Api-Version: 2022-11-28" \
+  -H "X-GitHub-Api-Version: 2026-03-10" \
   -H "Accept: application/vnd.github+json" \
   -H "Content-Type: application/json" \
   -d '{
@@ -559,7 +580,7 @@ curl -s -X POST "https://api.github.com/repos/acme/api-service/check-runs" \
 ```bash
 curl -s -X POST "https://api.github.com/repos/acme/api-service/releases" \
   -H "Authorization: Bearer $GH_TOKEN" \
-  -H "X-GitHub-Api-Version: 2022-11-28" \
+  -H "X-GitHub-Api-Version: 2026-03-10" \
   -H "Accept: application/vnd.github+json" \
   -H "Content-Type: application/json" \
   -d '{
@@ -582,7 +603,7 @@ UPLOAD_URL="https://uploads.github.com/repos/acme/api-service/releases/$RELEASE_
 
 curl -s -X POST "$UPLOAD_URL?name=api-service-linux-amd64" \
   -H "Authorization: Bearer $GH_TOKEN" \
-  -H "X-GitHub-Api-Version: 2022-11-28" \
+  -H "X-GitHub-Api-Version: 2026-03-10" \
   -H "Accept: application/vnd.github+json" \
   -H "Content-Type: application/octet-stream" \
   --data-binary @dist/api-service-linux-amd64
@@ -598,7 +619,7 @@ curl -s -X POST "$UPLOAD_URL?name=api-service-linux-amd64" \
 # Step 1 — get the repo's public key (used to encrypt the secret)
 PUB_KEY_RESP=$(curl -s "https://api.github.com/repos/acme/api-service/actions/secrets/public-key" \
   -H "Authorization: Bearer $GH_TOKEN" \
-  -H "X-GitHub-Api-Version: 2022-11-28" \
+  -H "X-GitHub-Api-Version: 2026-03-10" \
   -H "Accept: application/vnd.github+json")
 
 KEY_ID=$(echo $PUB_KEY_RESP | jq -r '.key_id')
@@ -618,7 +639,7 @@ print(base64.b64encode(encrypted).decode())
 # Step 3 — upsert the secret
 curl -s -X PUT "https://api.github.com/repos/acme/api-service/actions/secrets/THIRD_PARTY_API_KEY" \
   -H "Authorization: Bearer $GH_TOKEN" \
-  -H "X-GitHub-Api-Version: 2022-11-28" \
+  -H "X-GitHub-Api-Version: 2026-03-10" \
   -H "Accept: application/vnd.github+json" \
   -H "Content-Type: application/json" \
   -d "{
@@ -737,7 +758,7 @@ import time, requests
 
 def github_request(method, url, **kwargs):
     headers = kwargs.pop("headers", {})
-    headers.setdefault("X-GitHub-Api-Version", "2022-11-28")
+    headers.setdefault("X-GitHub-Api-Version", "2026-03-10")
     headers.setdefault("Accept", "application/vnd.github+json")
 
     for attempt in range(5):

@@ -1,8 +1,17 @@
 # Slack Skill
 
-> **Last validated:** 2026-02-26 | **API:** Slack Web API (no versioned URL path)
+> **Last validated:** 2026-08-02 | **API:** Slack Web API (no versioned URL path)
 > **REST base URL:** `https://slack.com/api/`
 > **Assumed product:** Slack (cloud). Slack Enterprise Grid adds org-level APIs but the core methods are identical.
+>
+> **⚠️ Changes since 2026-02:**
+> - **Bot-accessible search exists now** (2026-02-17) via `assistant.search.context` — see the scopes table below.
+> - **System notifications now come from the "Slack" user (`USLACK`), not Slackbot** (2026-06-17). Any handler that filters or routes on Slackbot's user ID must be updated.
+> - **Optional OAuth scopes** (2026-03-16): app manifests support `bot_optional` and `user_optional` to mark scopes as optional at install time.
+> - **`assistant.threads.setStatus`** accepts `chat:write` as well as `assistant:write` (2026-03-05); `assistant:write` is being phased out.
+> - **Node SDK v8 / Bolt for JS v5** (2026-07-14/15) require Node.js 20+, moved from axios to native `fetch`, and removed Workflow Steps from Apps. This doc's examples are HTTP-level and unaffected, but pinned SDK versions in your own code are not.
+>
+> **Docs moved:** `api.slack.com` now redirects to `docs.slack.dev`. The Web API endpoints themselves are unchanged.
 
 ---
 
@@ -131,9 +140,16 @@ curl -s https://slack.com/api/auth.test \
 | `channels:manage` | Create/archive public channels |
 | `groups:write` | Create/archive private channels |
 | `team:read` | Get workspace info |
-| `search:read` | Search messages (user token only — not available to bots) |
+| `search:read` | Search messages via `search.messages` (user token only) |
+| `search:read.public` / `search:read.files` / `search:read.users` | Granular search scopes for `assistant.search.context` (bot-accessible) |
+| `search:read.im` / `search:read.mpim` / `search:read.private` | Additional `assistant.search.context` scopes — user token only |
 
-> **Note:** `search:read` requires a **user token** (`xoxp-...`). There is no bot-accessible search API; use `conversations.history` + cursor pagination for bot-accessible message scanning.
+> **⚠️ Changed 2026-02-17:** Slack shipped the Real-time Search API, so the old rule of thumb "bots cannot search" no longer holds.
+> - **`search.messages`** still requires a **user token** (`xoxp-...`) with `search:read`.
+> - **`assistant.search.context`** searches messages, files, channels, and users and **does work with a bot token**, using granular scopes (`search:read.public`, `search:read.files`, `search:read.users`). Bot-token calls must additionally pass an `action_token` obtained from the triggering message event; user-token calls do not.
+> - `assistant.search.context` replaced the single `search:read` scope with the granular set above.
+>
+> For plain message scanning where you control the channel list, `conversations.history` + cursor pagination remains the simplest bot-accessible option and needs no `action_token`.
 
 ### Required headers (always include)
 
@@ -723,18 +739,18 @@ Do NOT log: token values, full message text (may contain PII), file contents.
 
 ## Sources
 
-- Slack Web API methods: https://api.slack.com/methods
-- Authentication & token types: https://api.slack.com/authentication/token-types
-- OAuth scopes: https://api.slack.com/scopes
-- Block Kit (rich message formatting): https://api.slack.com/block-kit
+- Slack Web API methods: https://docs.slack.dev/reference/methods/
+- Authentication & token types: https://docs.slack.dev/authentication/tokens/
+- OAuth scopes: https://docs.slack.dev/reference/scopes/
+- Block Kit (rich message formatting): https://docs.slack.dev/block-kit/
 - Block Kit Builder (interactive): https://app.slack.com/block-kit-builder
-- Events API: https://api.slack.com/events-api
-- Signing secrets & request verification: https://api.slack.com/authentication/verifying-requests-from-slack
-- Rate limits: https://api.slack.com/docs/rate-limits
-- File upload (new API): https://api.slack.com/methods/files.getUploadURLExternal
-- Conversations API: https://api.slack.com/docs/conversations-api
-- Pagination: https://api.slack.com/docs/pagination
-- Incoming Webhooks: https://api.slack.com/messaging/webhooks
-- Socket Mode: https://api.slack.com/apis/socket-mode
+- Events API: https://docs.slack.dev/apis/events-api/
+- Signing secrets & request verification: https://docs.slack.dev/authentication/verifying-requests-from-slack/
+- Rate limits: https://docs.slack.dev/apis/web-api/rate-limits/
+- File upload (new API): https://docs.slack.dev/reference/methods/files.getUploadURLExternal/
+- Conversations API: https://docs.slack.dev/apis/web-api/using-the-conversations-api/
+- Pagination: https://docs.slack.dev/apis/web-api/pagination/
+- Incoming Webhooks: https://docs.slack.dev/messaging/sending-messages-using-incoming-webhooks/
+- Socket Mode: https://docs.slack.dev/apis/events-api/using-socket-mode/
 - Enterprise Grid Audit Logs API: https://api.slack.com/admins/audit-logs
-- mrkdwn formatting reference: https://api.slack.com/reference/surfaces/formatting
+- mrkdwn formatting reference: https://docs.slack.dev/messaging/formatting-message-text/
