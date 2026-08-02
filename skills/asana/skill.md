@@ -1,6 +1,6 @@
 # Asana Skill
 
-> **Last validated:** 2026-05-13 | **API:** Asana REST API 1.0
+> **Last validated:** 2026-08-02 | **API:** Asana REST API 1.0
 > **REST base URL:** `https://app.asana.com/api/1.0`
 > **Assumed product:** Asana cloud. Enterprise controls, SCIM, and admin APIs may require additional scopes and plan-specific access.
 >
@@ -12,6 +12,12 @@
 > - **Custom Types in Memberships (2026-03-31):** memberships endpoints now support custom-type filters.
 > - **Goals API (2026-04-06):** goals now expose privacy settings, default access levels, and stories.
 > - **Enhanced filtering on the Search API (2026-04-06):** custom task types now usable as filter dimensions.
+>
+> **⚠️ Changes since 2026-05:**
+> - **Granular RBAC permissions (2026-07-02):** finer-grained role-based access control, extending the Role API above.
+> - **AI Studio Usage API (2026-07-02):** new endpoint for tracking AI Studio consumption.
+> - **`sort_by=relevance` on project search (2026-06-04):** relevance ordering now available alongside the existing sort options.
+> - **AI teammates / agent API support announced (2026-05-28)** — not yet GA; no action required, but expect new actor types on tasks and stories.
 >
 > **Source:** https://forum.asana.com/c/forum-en/api/api-change-log/204
 

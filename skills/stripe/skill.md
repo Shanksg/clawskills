@@ -1,8 +1,17 @@
 # Stripe Skill
 
-> **Last validated:** 2026-03-01 | **API version:** `2026-02-25.clover` (latest stable)
+> **Last validated:** 2026-08-02 | **API version:** `2026-07-29.dahlia` (latest stable)
 > **REST base URL:** `https://api.stripe.com/v1/`
 > **Assumed product:** Stripe Payments + Billing. Stripe Connect (multi-account platform) is covered in the Auth and Recipes sections.
+>
+> **⚠️ Changed 2026-03-25:** Stripe opened the **Dahlia** release train (`2026-03-25.dahlia`), succeeding Clover. Only the first version in a train carries breaking changes; later Dahlia versions (`2026-04-22`, `2026-05-27`, `2026-06-24`, `2026-07-29`) are additive. Breaking changes in `2026-03-25.dahlia` that affect server-side integrations:
+> - **Connect / Capabilities API:** risk requirements added to capability objects — code that enumerates requirement types must tolerate the new entries.
+> - **Subscriptions:** a new `retention_policy` cancellation reason can now appear on `cancellation_details.reason`. Treat the reason field as an open enum.
+> - **Event destinations:** the `events_from` parameter now takes string values.
+> - **Issuing:** the Visa card reference ID is now optional on token card references.
+> - The remaining breaking changes are in Stripe.js / Elements (renamed `initCheckout()` → `initCheckoutElements()`, `initEmbeddedCheckout()` → `createEmbeddedCheckoutPage()`, `elements.update()` now returns a Promise) and affect browser code, not the REST calls in this doc.
+>
+> `2026-02-25.clover` still works — Stripe supports old versions indefinitely for existing accounts — but examples below pin `2026-07-29.dahlia`.
 
 ---
 
@@ -136,7 +145,7 @@ Always pin the API version explicitly to avoid unexpected behaviour when Stripe 
 ```bash
 curl https://api.stripe.com/v1/payment_intents \
   -u "sk_test_...:" \
-  -H "Stripe-Version: 2026-02-25.clover" \
+  -H "Stripe-Version: 2026-07-29.dahlia" \
   -d amount=2000 \
   -d currency=usd
 ```

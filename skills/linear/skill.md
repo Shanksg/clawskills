@@ -1,9 +1,17 @@
 # Linear Skill
 
-> **Last validated:** 2026-03-02 | **API:** GraphQL (no versioned URL path)
+> **Last validated:** 2026-08-02 | **API:** GraphQL (no versioned URL path)
 > **GraphQL endpoint:** `https://api.linear.app/graphql`
 > **Assumed product:** Linear (cloud). The same API powers all Linear workspaces.
-> **⚠️ OAuth note:** Apps created after October 1, 2025 issue short-lived access tokens (24 hr) and require refresh token rotation. Apps created before that date use long-lived tokens until the April 1, 2026 migration deadline.
+> **⚠️ OAuth note:** Apps created after October 1, 2025 issue short-lived access tokens (24 hr) and require refresh token rotation. Apps created before that date used long-lived tokens until the April 1, 2026 migration deadline, which has now passed — the migration endpoint `POST /oauth/migrate_old_token` returns **`410 Gone`** as of May 21, 2026. Un-migrated apps must re-authorize from scratch.
+>
+> **⚠️ Schema changes since 2026-05:**
+> - **`Team.private` is deprecated** in favour of the `Team.visibility` enum (2026-05-21). Read `visibility`; `private` still resolves but will be removed.
+> - **`AiPrompt` query/mutation roots are deprecated**; parallel `AgentSkill` types were added alongside them (2026-05-21). Migrate skill-related calls to `AgentSkill`.
+> - **Cycle validation tightened** (2026-07-23): `cycleCreate` and `cycleUpdate` now reject overlapping schedules and validate dates against neighbouring cycles. Sprint-automation code that created back-to-back or overlapping cycles will now error — see Recipes.
+> - **`templateCreate` / `templateUpdate`** reject unsupported form-field payloads (2026-06-18).
+> - **Duplicate issues** must now link to the original; marking an issue duplicate moves its customer requests and attachments to the canonical issue (2026-05-21).
+> - **Webhooks:** the actor union gained an external-user variant, and data-change payloads now include a top-level `url` field on remove actions (2026-07-02).
 
 ---
 

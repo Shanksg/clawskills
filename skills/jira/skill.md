@@ -1,6 +1,6 @@
 # Jira Skill
 
-> **Last validated:** 2026-05-11 | **API:** Jira Cloud REST API v3
+> **Last validated:** 2026-08-02 | **API:** Jira Cloud REST API v3
 > **Base URL:** `https://{your-domain}.atlassian.net/rest/api/3/`
 > **Assumed product:** Jira Cloud (Software or Service Management). Note differences from Jira Data Center where applicable.
 >
@@ -11,6 +11,10 @@
 > - **Workflow admin APIs removed 2026-04-07:** the legacy `Get all workflows` and `Create workflow` endpoints have been removed. Use the newer paginated workflow APIs. Issue-level **transitions** (`POST /rest/api/3/issue/{key}/transitions`) are unaffected.
 > - `draft` parameters on workflow rule APIs **deprecated** (2026-04-20).
 > - Classic API token access for **Jira Product Discovery** deprecated (2026-04-30) — migrate to scoped tokens.
+> - **Workflow transition properties APIs removed 2026-07-13** — the transition-properties endpoint set is gone from the public API. Use `Bulk get workflows` / `Bulk update workflows` to read and write transition properties. Issue-level **transitions** (`POST /rest/api/3/issue/{key}/transitions`, Recipe 4) are unaffected.
+> - **Webhook payloads: `workflowId` deprecated (2026-07-19, sunset 2027-07-31)** — a new `workflowEntityId` field identifies the workflow correctly for the Workflow REST APIs. Applies to Connect post functions and "Trigger a Webhook" post functions. If your handler reads `workflowId`, switch to `workflowEntityId` before the sunset.
+>
+> **Additive since 2026-05:** `projectId` filter on the workflow search API (2026-06-22); `includeGlobalStatuses` on project-scoped status search (2026-06-25, defaults to `false`).
 
 ---
 

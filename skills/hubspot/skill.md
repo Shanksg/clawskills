@@ -1,6 +1,6 @@
 # HubSpot Skill
 
-> **Last validated:** 2026-05-11 | **API:** HubSpot CRM API v3 (date-based versioning GA — March 30, 2026)
+> **Last validated:** 2026-08-02 | **API:** HubSpot CRM API v3 (date-based versioning GA — March 30, 2026)
 > **Base URL:** `https://api.hubapi.com/crm/v3/objects/{objectType}`
 > **Assumed products:** CRM (Contacts, Companies, Deals) + Marketing Hub + Sales Hub
 >
@@ -9,7 +9,13 @@
 > - CRM Search API max page size raised to **200 records** (was 100); rate limit raised to **5 req/s** (was 4).
 > - `X-HubSpot-RateLimit-Secondly` and `X-HubSpot-RateLimit-Secondly-Remaining` headers **deprecated** — use `X-HubSpot-RateLimit-Remaining` instead.
 > - Contact Lists API v1 **sunset April 30, 2026** — endpoints now return 404. Use the v3 Lists API.
-> - **Date-based API versioning is GA (March 30, 2026)** — pin a dated version by passing the version in the API path or version header per HubSpot's docs; unpinned calls follow the latest stable. The legacy `v3` path remains valid.
+> - **Date-based API versioning is GA (March 30, 2026)** — dated versions use a `/YYYY-MM/` path segment; unpinned calls follow the latest stable. The legacy `v3` path remains valid and is what every recipe below uses.
+>
+> **⚠️ Changes since 2026-05:**
+> - **Legacy public app creation sunset May 26, 2026** — you can no longer create new legacy public apps. Existing ones keep working; new integrations must use the current app model.
+> - **Official SDKs support date-based versioning as of June 10, 2026**, generated from HubSpot's central API spec. If you pin SDK versions, upgrade before adopting `/YYYY-MM/` paths.
+> - **`hs_customer_agent_lead_status` became read-only July 13, 2026** — writes to this contact property now fail.
+> - Additive (July 2026): higher owner-property limits, larger Webhooks Journal batch sizes, and a historical API-usage chart in the developer portal.
 
 ---
 
