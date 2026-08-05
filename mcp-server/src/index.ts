@@ -388,21 +388,31 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
   tools: [
     {
       name: "list_skills",
-      description: "List all available ClawSkills API integration skill docs.",
+      description:
+        "List the slugs of every available API integration skill doc, with a one-line summary of each. " +
+        "Read-only; takes no arguments; returns a short list (currently 14 entries), not the doc bodies. " +
+        "Call this first when you do not yet know which platform slug to pass to get_skill, or to check whether a platform is covered at all before falling back to general knowledge.",
       inputSchema: { type: "object", properties: {}, required: [] },
     },
     {
       name: "get_skill",
       description:
-        "Retrieve a ClawSkills skill doc by name (slug). Optionally specify a section (e.g. 'auth', 'rate-limits', 'recipes') to get just that part.",
+        "Fetch the integration guide for one SaaS platform: authentication, rate limits, pagination, error handling, and tested request recipes. " +
+        "Read-only. Returns Markdown. A whole doc is large (roughly 20-40 KB), so pass `section` to retrieve just the part you need unless you genuinely want everything. " +
+        "Use this when you already know the platform; use search_skills instead when you know the problem but not the platform. " +
+        "Each doc carries a `Last validated` date in its header indicating when it was last checked against the vendor's live documentation.",
       inputSchema: {
         type: "object",
         properties: {
-          name: { type: "string", description: "Skill slug, e.g. 'salesforce', 'github', 'figma'" },
+          name: {
+            type: "string",
+            description:
+              "Skill slug, lowercase, exactly as returned by list_skills. One of: asana, dynamics365, figma, github, hubspot, jira, linear, monday, notion, salesforce, servicenow, slack, stripe, zendesk.",
+          },
           section: {
             type: "string",
             description:
-              "Optional section name. Aliases: auth, rate-limits, errors, pagination, recipes, gotchas, webhooks, overview, fields",
+              "Optional. Return only this section instead of the whole document. One of: auth, rate-limits, errors, pagination, recipes, gotchas, webhooks, overview, fields. Omit to return the full doc.",
           },
         },
         required: ["name"],
@@ -411,38 +421,60 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     {
       name: "search_skills",
       description:
-        "Search across all skill docs for a query string. Returns matching excerpts with context. Useful when you don't know which skill to fetch.",
+        "Full-text search across all 14 platform skill docs, returning matching excerpts with surrounding context rather than whole documents. " +
+        "Read-only. Use when you know the problem but not which platform doc answers it — for example a specific error code, header, or auth mechanism. " +
+        "Searches single-platform docs only; use search_clawskills if the task spans two systems.",
       inputSchema: {
         type: "object",
         properties: {
-          query: { type: "string", description: "Search query, e.g. '429 retry', 'OAuth scopes', 'webhook signature'" },
+          query: {
+            type: "string",
+            description:
+              "Free-text query matched against document contents. Works best with concrete API terms, e.g. '429 retry', 'OAuth scopes', 'webhook signature'.",
+          },
         },
         required: ["query"],
       },
     },
     {
       name: "list_playbooks",
-      description: "List all available ClawSkills workflow playbooks.",
+      description:
+        "List the slugs of every available cross-tool workflow playbook, with a one-line summary of each. " +
+        "Read-only; takes no arguments; returns a short list (currently 4 entries), not the playbook bodies. " +
+        "Playbooks describe how to wire two systems together end to end; single-platform API questions are covered by list_skills instead.",
       inputSchema: { type: "object", properties: {}, required: [] },
     },
     {
       name: "get_playbook",
-      description: "Retrieve a ClawSkills workflow playbook by name (slug).",
+      description:
+        "Fetch one cross-tool workflow playbook: the trigger, source of truth, field mapping, idempotency and dedup keys, retry and partial-failure policy, and reconciliation steps for syncing two systems. " +
+        "Read-only. Returns Markdown, typically a few KB. " +
+        "Use this when the task spans two platforms (for example 'create a Jira issue from a Zendesk ticket'); use get_skill when the task involves only one.",
       inputSchema: {
         type: "object",
         properties: {
-          name: { type: "string", description: "Playbook slug, e.g. 'zendesk-jira-bug-escalation'" },
+          name: {
+            type: "string",
+            description:
+              "Playbook slug, lowercase, exactly as returned by list_playbooks. One of: hubspot-asana-onboarding, salesforce-hubspot-lead-sync, slack-jira-incident, zendesk-jira-bug-escalation.",
+          },
         },
         required: ["name"],
       },
     },
     {
       name: "search_playbooks",
-      description: "Search across workflow playbooks for a query string and return matching excerpts with context.",
+      description:
+        "Full-text search across the cross-tool workflow playbooks, returning matching excerpts with surrounding context. " +
+        "Read-only. Use for orchestration concerns that recur across integrations — idempotency, dedup keys, rollback, partial failure — when you do not know which playbook covers them.",
       inputSchema: {
         type: "object",
         properties: {
-          query: { type: "string", description: "Search query, e.g. 'idempotency', 'rollback', 'customer impact'" },
+          query: {
+            type: "string",
+            description:
+              "Free-text query matched against playbook contents, e.g. 'idempotency', 'rollback', 'customer impact'.",
+          },
         },
         required: ["query"],
       },
@@ -450,11 +482,17 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     {
       name: "search_clawskills",
       description:
-        "Search across both skills and playbooks. For workflow-shaped queries, playbooks are ranked ahead of generic skill matches.",
+        "Full-text search across both the platform skill docs and the workflow playbooks in one call, returning matching excerpts with context. " +
+        "Read-only. Playbooks are ranked ahead of skill matches for workflow-shaped queries. " +
+        "Prefer this as the default entry point when you are unsure whether the answer is a single-platform API detail or a two-system workflow; reach for search_skills or search_playbooks only when you want to restrict results to one of the two.",
       inputSchema: {
         type: "object",
         properties: {
-          query: { type: "string", description: "Search query, e.g. 'closed won onboarding', 'zendesk jira escalation', 'lead sync'" },
+          query: {
+            type: "string",
+            description:
+              "Free-text query matched against both corpora, e.g. 'closed won onboarding', 'zendesk jira escalation', 'lead sync'.",
+          },
         },
         required: ["query"],
       },
