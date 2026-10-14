@@ -1,14 +1,16 @@
 # ServiceNow Skill
 
-> **Last validated:** 2026-08-02 | **API:** ServiceNow REST Table API + Attachment API | **Current release:** Australia (Early Availability March 12, 2026) — re-confirmed against servicenow.com/docs on 2026-08-02
+> **Last validated:** 2026-10-14 | **API:** ServiceNow REST Table API + Attachment API | **Current release:** Brazil (Early Availability September 24, 2026) — confirmed against servicenow.com/docs on 2026-10-14
 > **Base URL:** `https://{instance-name}.service-now.com/api/now/`
 > **Assumed product:** ITSM (Incident, Problem, Change, Request). All APIs are available on other ServiceNow apps using the same Table API pattern.
 >
-> **Release history:** Xanadu (2024) → Yokohama (March 2025) → Zurich (2025) → **Australia** (Early Availability March 12, 2026, current). The Table API and Attachment API request/response formats are unchanged across all of these — recipes in this doc work on any of them.
+> **Release history:** Xanadu (2024) → Yokohama (March 2025) → Zurich (2025) → Australia (Early Availability March 12, 2026) → **Brazil** (Early Availability September 24, 2026, current). The Table API and Attachment API request/response formats are unchanged across all of these — recipes in this doc work on any of them.
 >
 > **⚠️ Updated 2026-08-02:** this doc previously tracked Yokohama, two releases behind. Doc links now point at the `australia-*` bundles. What Australia adds that matters for integrations:
 > - **Attachment attribute endpoints** — `GET`/`DELETE /now/attachment/{sys_id}/attributes` and `GET`/`DELETE /now/attachment/{sys_id}/attributes/{key}` for reading and managing attachment metadata.
 > - **CopyDynamicSchemaAPI** — programmatic copying of schema configurations.
+>
+> **⚠️ Changed 2026-09-24:** Brazil reached Early Availability. Doc links now point at the Brazil docs. The Brazil API release notes list no changes to the Table, Attachment, or Import Set APIs or to OAuth — recipes are unchanged. New REST APIs in Brazil (Developer Sandbox Management, Stream Connect Schema Registry, Sales Cart) are outside this doc's ITSM scope.
 >
 > Instance versions lag the family release; check **System Diagnostics → Stats** on your instance rather than assuming it runs the newest family.
 
@@ -529,15 +531,15 @@ ServiceNow uses optimistic locking internally. If two concurrent PATCH requests 
 
 ## Sources
 
-- ServiceNow Table API (Australia): https://www.servicenow.com/docs/bundle/australia-api-reference/page/integrate/inbound-rest/concept/c_TableAPI.html
-- Australia API Release Notes: https://www.servicenow.com/docs/bundle/australia-release-notes/page/release-notes/now-platform-app-engine/api-rn.html
+- ServiceNow Table API (Brazil): https://www.servicenow.com/docs/r/brazil/api-reference/rest-apis/c_TableAPI.html
+- Brazil API Release Notes: https://www.servicenow.com/docs/r/brazil/release-notes/api-rn-static.html
 - New REST APIs by release (Yokohama-era overview, still useful background): https://www.servicenow.com/community/developer-blog/yokohama-integration-landscape-new-web-service-rest-apis/ba-p/3166555
-- Australia Release Notes: https://www.servicenow.com/docs/bundle/australia-release-notes/page/release-notes/family-release-notes.html
+- Brazil Release Notes: https://www.servicenow.com/docs/r/brazil/release-notes/family-release-notes.html
 - Attachment API: https://developer.servicenow.com/dev.do#!/reference/api/australia/rest/c_AttachmentAPI
 - OAuth 2.0 setup: https://developer.servicenow.com/dev.do#!/guides/australia/now-platform/tpb-oauth/c_OAuth2AuthenticationWithSNOW
 - Encoded Query Strings: https://developer.servicenow.com/dev.do#!/guides/australia/now-platform/tpb-ui/c_EncodedQueryStrings
 - Import Sets: https://developer.servicenow.com/dev.do#!/reference/api/australia/rest/c_ImportSetAPI
 - Outbound REST: https://developer.servicenow.com/dev.do#!/learn/learning-plans/australia/new_to_servicenow/app_store_learnv2_rest_australia_outbound_rest_integrations
 - Business Rules: https://developer.servicenow.com/dev.do#!/guides/australia/now-platform/tpb-glide/c_BusinessRulesAPI
-- Flow Designer: https://docs.servicenow.com/bundle/australia-build-workflows/page/administer/flow-designer/concept/flow-designer.html
+- Flow Designer: https://www.servicenow.com/docs/r/brazil/build-workflows/workflow-studio/workflow-studio-flows-subflows-and-actions-landing.html
 - API Rate Limits best practices: https://developer.servicenow.com/dev.do#!/guides/australia/now-platform/tpb-rest/c_RESTAPIBestPractices

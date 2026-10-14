@@ -1,10 +1,12 @@
 # Monday.com Skill
 
-> **Last validated:** 2026-08-02 | **API:** monday.com GraphQL API | **Current version:** `2026-07` (July 1, 2026)
+> **Last validated:** 2026-10-14 | **API:** monday.com GraphQL API | **Current version:** `2026-07` (July 1, 2026)
 > **Note:** monday.com uses GraphQL exclusively — not REST. All requests go to a single endpoint.
-> **Versions:** RC=`2026-10` (deprecates 2027-01-15) | Current=`2026-07` | Maintenance=`2026-04` | Deprecated: `2025-10`, `2025-01`, `2024-10` (routed to `2025-04` as of Feb 15, 2026)
+> **Versions:** RC=`2026-10`, `2027-01` | Current=`2026-07` | Maintenance=`2026-04` | Deprecated: `2025-10`, `2025-01`, `2024-10` (routed to `2025-04` as of Feb 15, 2026)
 >
 > **⚠️ Changed 2026-07-01:** `2026-07` is now the stable Current version and the default when no `API-Version` header is passed. `2026-04` moved to Maintenance — bug fixes only, no new features. All examples below pin `2026-07`.
+>
+> **Note (2026-10-14):** the published schedule had `2026-10` becoming Current on Oct 1, 2026, but the live API (`query { versions { kind value } }`) still reports `2026-07` as Current and `2026-10` as RC. Keep pinning `2026-07` until `2026-10` is actually promoted.
 >
 > monday.com announces deprecations at least six months ahead, so a version reaching Maintenance is your migration signal, not an emergency.
 
@@ -146,7 +148,7 @@ Or with API version header (recommended — always pin a specific version):
 API-Version: 2026-07
 ```
 
-> **Important:** Always pin a version header in production. Without it, requests default to `Current`, which changes quarterly and can break your integration. Current as of 2026-08-02: `2026-07`.
+> **Important:** Always pin a version header in production. Without it, requests default to `Current`, which changes quarterly and can break your integration. Current as of 2026-10-14: `2026-07`.
 
 ### OAuth 2.0 scopes (least privilege)
 

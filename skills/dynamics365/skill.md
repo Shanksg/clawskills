@@ -1,10 +1,10 @@
 # Microsoft Dynamics 365 Skill
 
-> **Last validated:** 2026-08-02 | **API:** Dataverse Web API (OData v4) v9.2
+> **Last validated:** 2026-10-14 | **API:** Dataverse Web API (OData v4) v9.2
 > **Base URL:** `https://{org-name}.crm.dynamics.com/api/data/v9.2/`
 > **Assumed product:** Dynamics 365 Sales. Other apps (Customer Service, Field Service) share the same Web API pattern.
 >
-> **Note:** Re-confirmed on 2026-08-02: v9.0, v9.1, and v9.2 still have identical Web API behavior with no breaking changes. No v9.3 or v10 announced. The 2026 release waves are PowerApps/Copilot features, not Web API surface changes. Microsoft's own guidance is to pin the version that was current when you wrote the code and test before moving up, rather than tracking the newest automatically.
+> **Note:** Re-confirmed on 2026-10-14: v9.0, v9.1, and v9.2 still have identical Web API behavior with no breaking changes. No v9.3 or v10 announced; Aug–Oct 2026 service updates (9.2.26081–9.2.26101) all stay on 9.2. The 2026 release waves are PowerApps/Copilot features, not Web API surface changes. Microsoft's own guidance is to pin the version that was current when you wrote the code and test before moving up, rather than tracking the newest automatically.
 > **Source:** https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/web-api-versions (page revision 2026-03-27)
 
 ---

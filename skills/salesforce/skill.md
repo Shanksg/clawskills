@@ -1,14 +1,14 @@
 # Salesforce Skill
 
-> **Last validated:** 2026-08-02 | **API:** Salesforce REST API + Bulk API v2 | **Version:** v67.0 (Summer '26)
+> **Last validated:** 2026-10-14 | **API:** Salesforce REST API + Bulk API v2 | **Version:** v67.0 (Summer '26)
 > **Assumed product:** Sales Cloud (CRM). Adjust object availability for other clouds.
 > **Version note:** v64.0 = Summer '25, v65.0 = Winter '26, v66.0 = Spring '26, **v67.0 = Summer '26 (current GA)**. All examples in this doc pin `/services/data/v67.0/`. Older versions stay supported under Salesforce's ~3-year API support window.
 >
-> **Re-confirmed 2026-08-02:** v67.0 is still the highest published REST API version — Winter '27 / v68.0 has not shipped yet. Verified against the [Versions resource doc](https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/resources_versions.htm), which **is** readable by plain HTTP fetchers, unlike the `help.salesforce.com` release-notes page (issue https://github.com/Shanksg/clawskills/issues/12). Use the versions doc for automated freshness checks and the release notes only for delta review in a browser.
+> **⚠️ Checked 2026-10-14 — Winter '27 is mid-rollout, examples stay on v67.0:** Salesforce's Trust status API (`https://api.status.salesforce.com/v1/maintenances`, filter `name=Winter '27 Major Release`) shows the core Winter '27 release resolved on part of the fleet (waves 2026-10-03, 10-09, 10-10) with the largest wave still scheduled for **2026-10-17**. Orgs not yet upgraded cannot call `/v68.0/`, so this doc keeps pinning `/v67.0/`, which works everywhere. The v68.0 delta has not been reviewed: developer.salesforce.com now returns `403` to all non-browser fetchers (including the versions doc, which moved to https://developer.salesforce.com/docs/platform/api-rest/guide/resources-versions.html), so the 2026-08-02 plain-fetch workaround no longer works (issue https://github.com/Shanksg/clawskills/issues/12). Check `GET /services/data/` on your own org to see which versions it supports.
 >
 > **⚠️ Announced for Winter '27:** enforcement of the API traffic URL requirement (first introduced in Summer '25, repeatedly postponed) lands in Winter '27. If you still call org URLs that are not the My Domain / enhanced-domain form, fix that before v68.0. Separately, SOAP `login()` retires for API versions 31.0–64.0 in Summer '27 — not used by this doc, which is REST-only.
 >
-> **Sources:** [REST API versions](https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/resources_versions.htm) · [Summer '26 API release notes](https://help.salesforce.com/s/articleView?id=release-notes.rn_api.htm&release=262&type=5) (JS-rendered; open in a real browser)
+> **Sources:** [REST API versions](https://developer.salesforce.com/docs/platform/api-rest/guide/resources-versions.html) · [Summer '26 API release notes](https://help.salesforce.com/s/articleView?id=release-notes.rn_api.htm&release=262&type=5) (JS-rendered; open in a real browser)
 
 ---
 

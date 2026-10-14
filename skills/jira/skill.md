@@ -1,6 +1,6 @@
 # Jira Skill
 
-> **Last validated:** 2026-08-02 | **API:** Jira Cloud REST API v3
+> **Last validated:** 2026-10-14 | **API:** Jira Cloud REST API v3
 > **Base URL:** `https://{your-domain}.atlassian.net/rest/api/3/`
 > **Assumed product:** Jira Cloud (Software or Service Management). Note differences from Jira Data Center where applicable.
 >
@@ -522,6 +522,8 @@ updated >= "2026-02-18"
 - Issue keys (e.g., `PROJ-42`) are globally unique within a project. Store the key in your external system as the canonical reference.
 - Before creating, search: `summary ~ "your-dedup-key" AND project = PROJ` — if found, update instead of create.
 - Use a dedicated text custom field (e.g., `External ID`) for reliable deduplication.
+
+> ⚠️ Changed 2026-10-06: JQL `=`, `IN`, and `NOT IN` on text fields now do an exact *phrase* search: the phrase can appear anywhere in the field, not only as the whole value. `"External ID" = "zendesk:123"` can now also match a longer value that contains that phrase. After the search, check that the field value equals your key exactly before you treat a hit as a duplicate. Source: https://developer.atlassian.com/cloud/jira/platform/changelog/
 
 ---
 

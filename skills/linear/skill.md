@@ -1,6 +1,6 @@
 # Linear Skill
 
-> **Last validated:** 2026-08-02 | **API:** GraphQL (no versioned URL path)
+> **Last validated:** 2026-10-14 | **API:** GraphQL (no versioned URL path)
 > **GraphQL endpoint:** `https://api.linear.app/graphql`
 > **Assumed product:** Linear (cloud). The same API powers all Linear workspaces.
 > **⚠️ OAuth note:** Apps created after October 1, 2025 issue short-lived access tokens (24 hr) and require refresh token rotation. Apps created before that date used long-lived tokens until the April 1, 2026 migration deadline, which has now passed — the migration endpoint `POST /oauth/migrate_old_token` returns **`410 Gone`** as of May 21, 2026. Un-migrated apps must re-authorize from scratch.

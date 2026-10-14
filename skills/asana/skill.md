@@ -1,6 +1,6 @@
 # Asana Skill
 
-> **Last validated:** 2026-08-02 | **API:** Asana REST API 1.0
+> **Last validated:** 2026-10-14 | **API:** Asana REST API 1.0
 > **REST base URL:** `https://app.asana.com/api/1.0`
 > **Assumed product:** Asana cloud. Enterprise controls, SCIM, and admin APIs may require additional scopes and plan-specific access.
 >
@@ -18,6 +18,15 @@
 > - **AI Studio Usage API (2026-07-02):** new endpoint for tracking AI Studio consumption.
 > - **`sort_by=relevance` on project search (2026-06-04):** relevance ordering now available alongside the existing sort options.
 > - **AI teammates / agent API support announced (2026-05-28)** — not yet GA; no action required, but expect new actor types on tasks and stories.
+>
+> **⚠️ Changes since 2026-08:**
+> - **Subtasks expose inherited project memberships (2026-08-10):** new `effective_memberships` opt_field (entries carry `is_inherited`). `custom_fields` on a subtask now reflects its full ancestor project set, so new entries may appear — handle unfamiliar fields. `projects` and `memberships` still return direct memberships only.
+> - **Custom types on projects and portfolios (opt-in GA 2026-08-18):** new `custom_type` fields/filters on tasks, projects, and portfolios plus `GET /custom_types`. **Default flips 2027-01-13:** unfiltered `GET /tasks`, `GET /projects`, `GET /portfolios` will also return Asana-created custom-typed objects — don't assume a fixed set of `resource_subtype` values.
+> - **Subtask date rollups (2026-09-28):** new `has_subtasks_date_mismatch` task field and `POST /tasks/{gid}/rollup` / `POST /projects/{gid}/rollup`. Jobs gain new `resource_subtype` values (`rollup_task`, `rollup_project`).
+> - **SCIM Users/Groups pagination (2026-10-08):** opt-in via `startIndex`/`count` or `cursor`; unpaged requests unchanged.
+> - **Time tracking entry `assignee` (2026-10-09):** `assignee` field and filter added; the `user` filter on `GET /time_tracking_entries` is deprecated in favor of `assignee`.
+> - **Rich text for text custom fields (2026-10-13):** read `html_text_value`, write via `html_custom_fields`. `text_value` and plain `custom_fields` writes are unchanged.
+> - **AI teammates** remain Early Access (opt-in header `Asana-Enable: ai_teammate_actors`) as of 2026-10-14.
 >
 > **Source:** https://forum.asana.com/c/forum-en/api/api-change-log/204
 
@@ -128,6 +137,8 @@ Workspace
 
 - A task can belong to **multiple projects** simultaneously (multi-homing) via the `memberships` array.
 - `custom_fields` on tasks are only populated when the task is a member of a project that has that custom field configured (`custom_field_settings`).
+
+> ⚠️ Changed 2026-08-10: for subtasks, `custom_fields` now includes fields from the full ancestor project chain (inherited memberships), not only direct ones. Request `effective_memberships` to see which projects a subtask inherits from.
 
 ### Naming conventions
 

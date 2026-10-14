@@ -1,8 +1,16 @@
 # Stripe Skill
 
-> **Last validated:** 2026-08-02 | **API version:** `2026-07-29.dahlia` (latest stable)
+> **Last validated:** 2026-10-14 | **API version:** `2026-09-30.endive` (latest stable)
 > **REST base URL:** `https://api.stripe.com/v1/`
 > **Assumed product:** Stripe Payments + Billing. Stripe Connect (multi-account platform) is covered in the Auth and Recipes sections.
+>
+> **⚠️ Changed 2026-09-30:** Stripe opened the **Endive** release train (`2026-09-30.endive`), succeeding Dahlia (last Dahlia version: `2026-08-26.dahlia`, additive only). Breaking changes in `2026-09-30.endive` that affect server-side integrations ([changelog](https://docs.stripe.com/changelog/endive)):
+> - **`payment_method_types` is no longer writable** on PaymentIntent create/update/confirm, SetupIntent create/update, or Checkout Session create — passing it returns `400` `payment_method_types_no_longer_supported`. Use dynamic payment methods (`automatic_payment_methods[enabled]=true`, as the recipes below already do), optionally with `excluded_payment_method_types`, or `allowed_payment_method_types` for an explicit list. The field remains read-only on the object.
+> - **`billing_cycle_anchor`** on subscription update/resume and `invoices/create_preview` now takes an object: `billing_cycle_anchor[type]=now` instead of `billing_cycle_anchor=now`.
+> - **Connect:** the generic fraud rejection reason is replaced by specific fraud reasons, platform-initiated rejections are distinguished from Stripe's, and errors are returned for eventually-due requirements — treat these as open enums.
+> - The rest (Financial Connections `countries` → `country`, PayTo field removals, SEPA billing-address enforcement, BLIK decline codes, Reserve enums, Stripe.js payment request button deprecation) don't touch the REST calls in this doc.
+>
+> Also new (non-breaking): subscriptions can be paused on demand (`POST /v1/subscriptions/{id}/pause`, flexible billing mode only) — `paused` status is no longer only a trial-end outcome; check `status_details`.
 >
 > **⚠️ Changed 2026-03-25:** Stripe opened the **Dahlia** release train (`2026-03-25.dahlia`), succeeding Clover. Only the first version in a train carries breaking changes; later Dahlia versions (`2026-04-22`, `2026-05-27`, `2026-06-24`, `2026-07-29`) are additive. Breaking changes in `2026-03-25.dahlia` that affect server-side integrations:
 > - **Connect / Capabilities API:** risk requirements added to capability objects — code that enumerates requirement types must tolerate the new entries.
@@ -11,7 +19,7 @@
 > - **Issuing:** the Visa card reference ID is now optional on token card references.
 > - The remaining breaking changes are in Stripe.js / Elements (renamed `initCheckout()` → `initCheckoutElements()`, `initEmbeddedCheckout()` → `createEmbeddedCheckoutPage()`, `elements.update()` now returns a Promise) and affect browser code, not the REST calls in this doc.
 >
-> `2026-02-25.clover` still works — Stripe supports old versions indefinitely for existing accounts — but examples below pin `2026-07-29.dahlia`.
+> Older versions (`2026-07-29.dahlia`, `2026-02-25.clover`) still work — Stripe supports old versions indefinitely for existing accounts — but examples below pin `2026-09-30.endive`.
 
 ---
 
@@ -93,7 +101,7 @@ requires_payment_method → requires_confirmation → requires_action → proces
 | `incomplete_expired` | Initial 23-hour window expired without payment |
 | `past_due` | Latest renewal invoice failed; automatic retries in progress |
 | `unpaid` | Retries exhausted; subscription remains but no more attempts |
-| `paused` | Trial ended without a default payment method |
+| `paused` | Trial ended without a default payment method, or paused on demand via `/pause` (see `status_details`) |
 | `canceled` | Terminal; cannot be reactivated |
 
 ### Amounts and currencies
@@ -145,7 +153,7 @@ Always pin the API version explicitly to avoid unexpected behaviour when Stripe 
 ```bash
 curl https://api.stripe.com/v1/payment_intents \
   -u "sk_test_...:" \
-  -H "Stripe-Version: 2026-07-29.dahlia" \
+  -H "Stripe-Version: 2026-09-30.endive" \
   -d amount=2000 \
   -d currency=usd
 ```
