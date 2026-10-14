@@ -1,6 +1,6 @@
 # HubSpot Skill
 
-> **Last validated:** 2026-08-02 | **API:** HubSpot CRM API v3 (date-based versioning GA — March 30, 2026)
+> **Last validated:** 2026-10-14 | **API:** HubSpot CRM API v3 (date-based versioning GA — March 30, 2026; latest dated version `2026-09`, released Sep 8, 2026)
 > **Base URL:** `https://api.hubapi.com/crm/v3/objects/{objectType}`
 > **Assumed products:** CRM (Contacts, Companies, Deals) + Marketing Hub + Sales Hub
 >
@@ -16,6 +16,12 @@
 > - **Official SDKs support date-based versioning as of June 10, 2026**, generated from HubSpot's central API spec. If you pin SDK versions, upgrade before adopting `/YYYY-MM/` paths.
 > - **`hs_customer_agent_lead_status` became read-only July 13, 2026** — writes to this contact property now fail.
 > - Additive (July 2026): higher owner-property limits, larger Webhooks Journal batch sizes, and a historical API-usage chart in the developer portal.
+>
+> **⚠️ Changes since 2026-08:**
+> - **Legacy `/v1/`–`/v3/` API paths moved to unsupported status Sep 15, 2026** (no more bug, reliability, or security fixes); **enforcement September 2027**. The `/crm/v3/` paths in the recipes below still work today, but plan to migrate straight to date-based `/YYYY-MM/` paths — HubSpot says not to use v3/v4 as an intermediate step. v4 (e.g., Associations v4) support ends March 30, 2027.
+> - **Legacy private app creation disabled** — Sep 28, 2026 for new accounts, Oct 26, 2026 for existing accounts. Existing private apps keep working; new in-account integrations use **Service Keys** (see Authentication below).
+> - **`2026-09` API version (Sep 8, 2026):** admin-configured validation rules (conditional required properties, record-creator required properties, "Edit Associations" permission) are enforced on all CRM write paths in `/2026-09/` and later — expect `400 VALIDATION_ERROR` with codes like `MISSING_CONDITIONAL_REQUIRED_PROPERTY`. Pipeline/stage deletes also validate references by default from `2026-09`.
+> - **Pipelines API V1 sunset December 4, 2026** — migrate to the `2026-09` Pipelines API (`/crm/pipelines/2026-09/{objectType}`).
 
 ---
 
@@ -102,6 +108,8 @@ Custom properties are created via the Properties API and referenced by their `na
 | **OAuth 2.0** | Multi-portal or third-party apps | Required for apps in the HubSpot marketplace |
 
 ### Private App Token (recommended for automation)
+
+> ⚠️ Changed 2026-09-28: creating new legacy private apps is disabled (Sep 28, 2026 for accounts created on/after that date; Oct 26, 2026 for existing accounts). Existing private app tokens keep working. For new in-account integrations, create a **Service Key** instead (**Development → Keys → Service keys → Create service key**, add scopes, copy the key) and send it exactly the same way: `Authorization: Bearer {service_key}`. Service keys are REST-only — they cannot authenticate webhooks or UI extensions; use an app for those. Rotating a key expires the old one (immediately or after 7 days). Docs: https://developers.hubspot.com/docs/apps/developer-platform/build-apps/authentication/account-service-keys
 
 1. In HubSpot → Settings → Integrations → Private Apps → Create a private app.
 2. Select scopes (see table below).

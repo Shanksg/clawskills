@@ -1,6 +1,6 @@
 # Slack Skill
 
-> **Last validated:** 2026-08-02 | **API:** Slack Web API (no versioned URL path)
+> **Last validated:** 2026-10-14 | **API:** Slack Web API (no versioned URL path)
 > **REST base URL:** `https://slack.com/api/`
 > **Assumed product:** Slack (cloud). Slack Enterprise Grid adds org-level APIs but the core methods are identical.
 >
@@ -9,6 +9,7 @@
 > - **System notifications now come from the "Slack" user (`USLACK`), not Slackbot** (2026-06-17). Any handler that filters or routes on Slackbot's user ID must be updated.
 > - **Optional OAuth scopes** (2026-03-16): app manifests support `bot_optional` and `user_optional` to mark scopes as optional at install time.
 > - **`assistant.threads.setStatus`** accepts `chat:write` as well as `assistant:write` (2026-03-05); `assistant:write` is being phased out.
+> - **Agent sessions replace `assistant.threads.*`** (2026-08-20): `agents.sessions.setStatus` replaces `assistant.threads.setStatus` (bot token, `chat:write`; `status` is one of `active`, `processing`, `suspended`, `closed`) and `agents.sessions.rename` replaces `assistant.threads.setTitle`. Existing `assistant.threads` calls keep working through a compatibility bridge for now; migrate new code to `agents.sessions.*`. New event: `agent_session_stopped` (user stopped your agent).
 > - **Node SDK v8 / Bolt for JS v5** (2026-07-14/15) require Node.js 20+, moved from axios to native `fetch`, and removed Workflow Steps from Apps. This doc's examples are HTTP-level and unaffected, but pinned SDK versions in your own code are not.
 >
 > **Docs moved:** `api.slack.com` now redirects to `docs.slack.dev`. The Web API endpoints themselves are unchanged.

@@ -1,8 +1,8 @@
 # GitHub Skill
 
-> **Last validated:** 2026-08-02 | **API:** GitHub REST API + GraphQL API v4
+> **Last validated:** 2026-10-14 | **API:** GitHub REST API + GraphQL API v4
 > **REST base URL:** `https://api.github.com`
-> **API version header:** `X-GitHub-Api-Version: 2026-03-10` (current stable, released March 10, 2026)
+> **API version header:** `X-GitHub-Api-Version: 2026-03-10` (current stable, released March 10, 2026; still the latest as of 2026-10-14)
 > **Assumed product:** GitHub.com (cloud). GitHub Enterprise Server differs in base URL and some rate limits.
 >
 > **⚠️ Changed 2026-03-10:** REST API version `2026-03-10` shipped 26 breaking changes. `2022-11-28` still works — GitHub supports each version for at least 24 months after a successor ships — but all examples in this doc are pinned to `2026-03-10`. Changes most likely to affect automation:
@@ -113,6 +113,8 @@ Organization / User (owner)
 | **OAuth App** | User-delegated access (acting on behalf of a user) | Standard OAuth 2.0 bearer token |
 | **`GITHUB_TOKEN`** | Inside GitHub Actions workflows only | Auto-generated per-run; limited to the repository |
 
+> **⚠️ Changed 2026-08-14:** OAuth Apps can now get expiring user tokens: request the `offline_access` scope (or configure the app to always use expiring tokens) and you receive an access token valid for **8 hours** plus a refresh token valid for **6 months** without use. Refreshing returns a new token pair and invalidates the old one. Don't assume a refresh token is always present — non-expiring tokens are still possible depending on app configuration.
+
 ### Fine-grained PAT (recommended for automation)
 
 Fine-grained PATs are scoped to a single owner (user or org) and specific repositories, with per-permission grants instead of broad scopes.
@@ -169,6 +171,8 @@ curl -s -X POST \
 curl -s https://api.github.com/repos/acme/api-service \
   -H "Authorization: Bearer ghs_..."
 ```
+
+> **⚠️ Changed 2026-10-02:** Installation tokens now use a stateless `ghs_APPID_JWT` format (rollout complete). The `ghs_` prefix and 1-hour expiry are unchanged, but tokens are now **~520 characters instead of 40**. Treat them as opaque strings: drop any 40-char/regex validation, and check DB column sizes, secret stores, proxies that cap `Authorization` header length, and log-redaction patterns. The temporary `X-GitHub-Stateless-S2S-Token` test header is ignored after 2026-11-30 — remove it.
 
 ### Required headers (always include)
 
@@ -588,6 +592,8 @@ curl -s -X POST "https://api.github.com/repos/acme/api-service/check-runs" \
 ```
 
 `conclusion` values: `success`, `failure`, `neutral`, `cancelled`, `skipped`, `timed_out`, `action_required`.
+
+> **⚠️ Changed 2026-10-01:** Check runs, workflow runs, and commit statuses — **including those created by third-party integrations via this API** — are now deleted after the repository's Actions retention period (default 90 days; max 400 for private repos, 90 for public). Previously they were kept 400+ days regardless. If you compute metrics from historical check runs/statuses, copy them to your own store.
 
 **Pitfall:** Check Runs require a **GitHub App token** (not a PAT) to render properly in the GitHub UI "Checks" tab. PATs can create check runs but they appear without the app icon and may have limited functionality.
 

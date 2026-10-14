@@ -1,6 +1,6 @@
 # Notion Skill
 
-> **Last validated:** 2026-08-02 | **API version:** `2026-03-11` (latest stable)
+> **Last validated:** 2026-10-14 | **API version:** `2026-03-11` (latest stable)
 > **REST base URL:** `https://api.notion.com/v1/`
 > **Assumed product:** Notion (cloud). The `Notion-Version: 2026-03-11` header is required on every request.
 >
@@ -632,13 +632,16 @@ Always paginate using `start_cursor` + `has_more` — do not assume 100 results 
 
 ### Rate limits
 
+> **⚠️ Changed 2026-09-09:** the flat "~3 req/sec" average is replaced by a fixed 60-second window per connection, sized by workspace plan, plus a separate shared per-workspace budget and some per-endpoint limits. Since 2026-09-24, `429`/`529` bodies carry `additional_data.retry_after` and `additional_data.rate_limit_reason`. Source: [Request limits](https://developers.notion.com/reference/request-limits), [changelog](https://developers.notion.com/page/changelog).
+
 | Limit | Value | Notes |
 |-------|-------|-------|
-| Global | **3 req/sec average** | Burst above this is allowed; sustained throughput is ~3/sec |
-| Response on limit | HTTP `429`, code `"rate_limited"` | |
-| Backoff header | `Retry-After` (integer seconds) | Always honour this value |
-
-There is no separate rate limit per endpoint — it's a single workspace-level budget.
+| Per connection | **600 req/min** (Business, Enterprise) / **180 req/min** (all other plans) | Fixed 60-second window; spend at any pace within it. `Retry-After` ≤ 60 s |
+| Per workspace | Shared budget across all of the workspace's connections, scales with plan | Can throttle you even when your connection is under its limit; `Retry-After` may exceed 60 s |
+| Per endpoint | Some endpoints have their own limits | `rate_limit_reason: public_api_endpoint_rate_limit` |
+| Response on limit | HTTP `429`, code `"rate_limited"`; `additional_data.rate_limit_reason` says which limit | `public_api_request_blocked` means API access is restricted — do **not** retry |
+| Overload | HTTP `529`, code `"service_overload"` | Retry exactly like a `429` |
+| Backoff header | `Retry-After` (integer seconds), echoed as `additional_data.retry_after` (string) | Always honour this value |
 
 ### Retry with exponential backoff
 
@@ -655,7 +658,7 @@ def notion_request(method: str, url: str, **kwargs) -> dict:
     })
     for attempt in range(5):
         resp = requests.request(method, url, headers=headers, **kwargs)
-        if resp.status_code == 429:
+        if resp.status_code in (429, 529):
             wait = int(resp.headers.get("Retry-After", 2 ** attempt))
             time.sleep(wait)
             continue
@@ -730,6 +733,7 @@ def upsert_page(database_id: str, external_id: str, properties: dict) -> dict:
 | 503 | `service_unavailable` | Notion offline or request timed out (60s limit) | Retry; break up large block payloads |
 | 503 | `database_connection_unavailable` | Notion DB unreachable | Retry with backoff |
 | 504 | `gateway_timeout` | Request processing timed out | Reduce payload size; retry |
+| 529 | `service_overload` | Notion temporarily overloaded | Wait `Retry-After` seconds; retry like a `429` |
 
 ### Common issues
 
@@ -805,7 +809,7 @@ All integration activity is visible in **Notion → Settings → Connections** (
 - [ ] `POST /v1/search` with `query: "<page title>"` finds the test page
 - [ ] Request sent without `Notion-Version` header returns `400` with code `missing_version`
 - [ ] Request to a page not shared with integration returns `404` with code `object_not_found`
-- [ ] Rapid requests (>3/sec) trigger `429`; `Retry-After` header is present; retry succeeds
+- [ ] Rapid requests (>180/min, or >600/min on Business/Enterprise) trigger `429`; `Retry-After` header is present; retry succeeds
 - [ ] Payload with 101 blocks in `children` returns `validation_error`
 - [ ] Upsert pattern: create, then call upsert again with same external ID → updates, does not duplicate
 

@@ -1,10 +1,11 @@
 # Figma Skill Reference
 
-**Last validated:** 2026-08-02
+**Last validated:** 2026-10-14
 **API version:** REST API v1 (stable) | Webhooks V2 (stable) | Pin `X-Figma-Api-Version` not required — versioning is path-based (`/v1/`, `/v2/`)
 **Base URL:** `https://api.figma.com` (Government: `https://api.figma-gov.com`)
 
 > **New since 2026-02:**
+> - **Folders API — August 10, 2026.** New `/v2` folder endpoints (`GET /v2/teams/:team_id/folders`, `/v2/folders/:folder_id/folders`, `/files`, `/meta`) for plans with nested folders; the v1 project endpoints are **deprecated** in favour of them. "Projects" are now called "folders" in the docs. See Recipe 6.
 > - **Plan access tokens — GA July 23, 2026.** Organization- and Enterprise-plan tokens that are **not tied to an individual user account**, with expiry up to one year and optional allowlists, managed by plan admins. This is now the recommended credential for CI/CD and org automation — it survives the token owner leaving the company, which personal access tokens do not. See Authentication below.
 > - **oEmbed API — March 25, 2026.** `oEmbed 1.0`-spec endpoint returning metadata for Figma files and published Makes. Requires the `file_metadata:read` scope.
 > - **AI Usage API — June 12, 2026.** Enterprise-only endpoint returning per-user, per-day AI credit usage. Requires the `org:ai_metering_usage_read` scope and a plan access token.
@@ -183,7 +184,9 @@ curl https://api.figma.com/v1/me \
 | `file_dev_resources:write` | Create/update dev resources |
 | `library_assets:read` | Published components and styles |
 | `library_analytics:read` | Design system analytics (Enterprise only) |
-| `projects:read` | List projects and files in a team |
+| `projects:read` | List projects and files in a team (v1 project endpoints — deprecated) |
+| `folders:read` | List folders, subfolders, and folder files (`/v2/folders`) — not usable by public OAuth apps |
+| `folder_metadata:read` | Folder metadata (`GET /v2/folders/:folder_id/meta`) |
 | `webhooks:read` | View webhook metadata |
 | `webhooks:write` | Create/update/delete webhooks |
 | `org:activity_log_read` | Activity logs (Enterprise admin only) |
@@ -456,6 +459,8 @@ def extract_tokens(file_key: str, token: str) -> dict:
 ---
 
 ### Recipe 6 — List projects and files in a team
+
+> ⚠️ Changed 2026-08-10: `GET /v1/teams/:team_id/projects`, `GET /v1/projects/:project_id/files`, and `GET /v1/projects/:project_id/meta` are **deprecated**. Replacements: `GET /v2/teams/:team_id/folders`, `GET /v2/folders/:folder_id/folders` (subfolders), `GET /v2/folders/:folder_id/files`, and `GET /v2/folders/:folder_id/meta`. These need the `folders:read` scope (`folder_metadata:read` for `/meta`), and `folders:read` cannot be used by public OAuth apps. On nested-folder plans the v1 team-projects endpoint returns only top-level folders. The v1 calls below still work. Sources: [changelog](https://developers.figma.com/docs/rest-api/changelog/), [Folders endpoints](https://developers.figma.com/docs/rest-api/folders-endpoints/).
 
 ```bash
 # Team projects

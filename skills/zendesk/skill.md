@@ -1,6 +1,6 @@
 # Zendesk Skill
 
-> **Last validated:** 2026-08-02 | **API:** Zendesk Support REST API v2
+> **Last validated:** 2026-10-14 | **API:** Zendesk Support REST API v2
 > **Base URL:** `https://{subdomain}.zendesk.com/api/v2/`
 >
 > **⚠️ Breaking changes since 2024:**
@@ -18,6 +18,10 @@
 > - **IT Asset Management (breaking 2026-08-06, announced 2026-07-06):** the `purchase_cost` field on assets becomes an object with `amount` and `currency` instead of a scalar. Only affects the ITAM Assets API.
 > - **AI Agents API (deprecation 2026-07-01, announced 2026-05-19):** the legacy `*.ultimate.ai` base URL is retired — use `{subdomain}.zendesk.com/ai-agents/api`.
 > - **Jira integration (2026-06-24):** Zendesk is delisting Jira Integration V2 and restoring the original version. Relevant to the [Zendesk → Jira bug escalation playbook](../../playbooks/zendesk-jira-bug-escalation.md), which uses the two products' REST APIs directly and is therefore unaffected by the marketplace app change.
+>
+> **Checked 2026-10-14:**
+> - **⚠️ Changed 2026-08-26: `POST /api/v2/oauth/tokens` (Create Token) deprecated.** The reference now marks it as no longer available. Use Create Token for Grant Type (`POST /oauth/tokens`, the token endpoint listed under OAuth 2.0 below) instead. This doc's OAuth flow already uses that endpoint.
+> - **Help Center Templating API v1–v3 end-of-life (starts 2026-09-14):** this affects Help Center themes only, not the Support endpoints in this doc.
 >
 > **Source:** https://developer.zendesk.com/api-reference/changelog/changelog/
 
