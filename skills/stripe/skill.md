@@ -110,7 +110,7 @@ All monetary amounts are in the **smallest currency unit** — cents for USD, pe
 
 ### Expandable fields
 
-Any field that returns an ID (e.g., `"customer": "cus_xxx"`) can be expanded to the full object by passing `expand[]=customer` in the request. Nest with dots: `expand[]=latest_invoice.payment_intent`.
+Any field that returns an ID (e.g., `"customer": "cus_xxx"`) can be expanded to the full object by passing `expand[]=customer` in the request. Nest with dots: `expand[]=latest_invoice.confirmation_secret`.
 
 ### Metadata
 
@@ -283,10 +283,12 @@ curl https://api.stripe.com/v1/subscriptions \
   -d customer=cus_PAbcXyz \
   -d "items[0][price]=price_1ABCdefGhIjKlMnO" \
   -d payment_behavior=default_incomplete \
-  -d "expand[]=latest_invoice.payment_intent"
+  -d "expand[]=latest_invoice.confirmation_secret"
 ```
 
-`payment_behavior=default_incomplete` starts the subscription in `incomplete` status — confirm payment client-side using the `latest_invoice.payment_intent.client_secret` before it expires (23 hours).
+`payment_behavior=default_incomplete` starts the subscription in `incomplete` status — confirm payment client-side using `latest_invoice.confirmation_secret.client_secret` before it expires (23 hours).
+
+> **⚠️ Changed 2025-03-31:** Since `2025-03-31.basil` (and therefore on the `2026-09-30.endive` version pinned here), the Invoice object no longer has `payment_intent` (nor `charge` / `paid`) — an invoice can have multiple payments, listed in `invoice.payments` (expandable; each entry is an [InvoicePayment](https://docs.stripe.com/api/invoice-payment)). To collect the first payment, expand `latest_invoice.confirmation_secret` instead of `latest_invoice.payment_intent`. `current_period_start` / `current_period_end` also moved off the Subscription onto each subscription item: read `items.data[].current_period_end`. ([invoice change](https://docs.stripe.com/changelog/basil/2025-03-31/add-support-for-multiple-partial-payments-on-invoices), [period change](https://docs.stripe.com/changelog/basil/2025-03-31/deprecate-subscription-current-period-start-and-end))
 
 **Response (key fields):**
 
@@ -294,12 +296,20 @@ curl https://api.stripe.com/v1/subscriptions \
 {
   "id": "sub_1ABCdef...",
   "status": "incomplete",
-  "current_period_end": 1740000000,
+  "items": {
+    "data": [
+      {
+        "id": "si_1ABCdef...",
+        "current_period_start": 1737400000,
+        "current_period_end": 1740000000
+      }
+    ]
+  },
   "latest_invoice": {
     "id": "in_1ABCdef...",
-    "payment_intent": {
-      "id": "pi_1ABCdef...",
-      "client_secret": "pi_...secret_..."
+    "confirmation_secret": {
+      "client_secret": "pi_...secret_...",
+      "type": "payment_intent"
     }
   }
 }

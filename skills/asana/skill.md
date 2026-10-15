@@ -187,11 +187,12 @@ curl -H "Authorization: Bearer YOUR_PAT" \
 - Register an app at https://app.asana.com/0/developer-console.
 - Authorization endpoint: `https://app.asana.com/-/oauth_authorize`
 - Token endpoint: `https://app.asana.com/-/oauth_token`
-- Scopes: Asana uses a **single `default` scope** that grants access to all data the authenticated user can access. There are no fine-grained OAuth scopes.
-- Include `offline_access` scope to receive a refresh token for long-lived sessions.
+- Scopes: granular `<resource>:<action>` scopes (e.g. `tasks:read`, `projects:write`), space-separated in the `scope` query param. Register them under **OAuth > Permission scopes** in the developer console first; requesting an unregistered scope fails with `forbidden_scopes`. Apps with registered scopes **must** pass `scope`. `write` does not imply `read`.
+- **Full permissions** (the `default` scope) still exists as a console toggle and grants all endpoints. You can't mix it with specific scopes: use `scope=default` or omit `scope`. Needed for endpoints that don't have scopes yet.
+- A refresh token is returned on the `authorization_code` exchange; no extra scope needed.
 
 ```
-scope=default+offline_access
+scope=tasks:read tasks:write projects:read stories:write
 ```
 
 ```bash
@@ -221,7 +222,23 @@ Access tokens are valid for 1 hour. Refresh tokens do not expire unless revoked.
 
 ### Required scopes (least privilege)
 
-Asana OAuth uses only `default` (and optionally `openid`, `email`, `profile` for identity). There is no scope granularity beyond `default`. Minimize access by:
+Request only what your recipes use (scope page lists the exact endpoints per scope). OpenID Connect adds `openid`, `email`, `profile`.
+
+| Operation (recipe) | Scope |
+|---|---|
+| Get/search/list tasks, list a section's tasks (2, 3, 7) | `tasks:read` |
+| Create/update task, `sections/{gid}/addTask` (1, 3, 7) | `tasks:write` |
+| Delete task (GDPR erasure) | `tasks:delete` |
+| Get/list projects (`task_count`) | `projects:read` |
+| Add/read comments (4) | `stories:write` / `stories:read` |
+| `POST /attachments`, `GET /attachments` (5) | `attachments:write` / `attachments:read` |
+| Create, list, delete webhooks (6) | `webhooks:write` / `webhooks:read` / `webhooks:delete` |
+| `GET /users/{gid}`, `/users/me` | `users:read` |
+| `GET /workspaces` | `workspaces:read` |
+| Typeahead lookup (1, 2) | `workspaces.typeahead:read` |
+| `addCustomFieldSetting` | `projects:write` |
+
+No scope is listed yet for `GET /projects/{gid}/sections`, `sections/{gid}/removeTask`, the task-scoped `/tasks/{gid}/attachments` endpoints, or project `addMembers`/`removeMembers`/`members` (Recipe 8). For attachments, switch to `POST /attachments` with `parent`; the others need Full permissions. Beyond OAuth scopes, minimize access by:
 - Using a **Service Account** with only the project memberships it needs.
 - Granting the service account access only to specific projects, not the entire workspace.
 
@@ -236,7 +253,7 @@ Asana OAuth uses only `default` (and optionally `openid`, `email`, `profile` for
 
 - Each Asana **workspace** is an independent data silo. Store `workspace_gid` per tenant.
 - For multi-workspace apps, implement per-tenant OAuth credential storage.
-- The `default` scope means your app accesses everything the user can see — scope access at the Asana membership level (project/team membership), not the OAuth scope level.
+- OAuth scopes limit endpoint types, not data: a token still sees every object the user can see. Limit data access at the Asana membership level (project/team membership).
 - Users in multiple workspaces: use `GET /api/1.0/workspaces` to enumerate and always pass `workspace` param when required.
 
 ---

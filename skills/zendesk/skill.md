@@ -4,7 +4,7 @@
 > **Base URL:** `https://{subdomain}.zendesk.com/api/v2/`
 >
 > **⚠️ Breaking changes since 2024:**
-> - OAuth **implicit grant** and **password grant** flows **deprecated as of February 17, 2025** — use Authorization Code grant only.
+> - OAuth **implicit grant** and **password grant** flows **deprecated as of February 17, 2025** — use Authorization Code grant (with PKCE for public clients), or `client_credentials` for confidential server-side clients.
 > - `www.zopim.com/api/v2` (legacy Zopim Chat REST API) **retired February 28, 2025** — use `{subdomain}.zendesk.com/api/v2/chat` instead.
 > - Old-style HTTP Target webhooks are superseded by the Webhooks API (`/api/v2/webhooks`) — migrate any remaining HTTP targets.
 >
@@ -131,7 +131,8 @@ Response gains `users` and `organizations` arrays at the top level.
 | Method | Format | When to use |
 |---|---|---|
 | **API Token + Email (Basic)** | `Authorization: Basic base64(email/token:API_TOKEN)` | Server-to-server integrations, scripts, automation |
-| **OAuth 2.0 — Authorization Code** | Bearer token via Authorization Code flow | Multi-tenant apps, user-delegated access (only supported grant type now) |
+| **OAuth 2.0 — Authorization Code** | Bearer token via Authorization Code flow (+ `refresh_token` grant) | Multi-tenant apps, user-delegated access |
+| **OAuth 2.0 — Client Credentials** | Bearer token from `client_id` + `client_secret` | Server-to-server integrations on a confidential OAuth client (no user consent step) |
 | **Password auth / Implicit grant** | ~~Basic with real password~~ / ~~Implicit~~ | **Deprecated** — both removed Feb 17, 2025. Do not use. |
 
 #### API Token (most common for integrations)
@@ -153,6 +154,16 @@ curl -u "agent@example.com/token:YOUR_API_TOKEN" \
 - Authorization endpoint: `https://{subdomain}.zendesk.com/oauth/authorizations/new`
 - Token endpoint: `https://{subdomain}.zendesk.com/oauth/tokens`
 - Scopes are space-separated strings (see below).
+- Supported `grant_type` values: `authorization_code`, `refresh_token`, `client_credentials`. The password grant is deprecated; implicit grant was switched off Feb 17, 2025 (migrate to Authorization Code + PKCE).
+
+**Client credentials (server-to-server).** Confidential clients only — public clients can't use it. No user authorization and no refresh token: request a new token when it expires. The token acts as the admin who created the OAuth client, so it stops working if that admin loses access.
+
+```bash
+curl https://{subdomain}.zendesk.com/oauth/tokens \
+  -H "Content-Type: application/json" \
+  -X POST \
+  -d '{"grant_type": "client_credentials", "client_id": "YOUR_CLIENT_ID", "client_secret": "YOUR_CLIENT_SECRET", "scope": "tickets:read tickets:write"}'
+```
 
 ### Required OAuth scopes (least privilege)
 
