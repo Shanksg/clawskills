@@ -2,7 +2,7 @@
 
 > **Last validated:** 2026-10-14 | **API:** monday.com GraphQL API | **Current version:** `2026-07` (July 1, 2026)
 > **Note:** monday.com uses GraphQL exclusively — not REST. All requests go to a single endpoint.
-> **Versions:** RC=`2026-10`, `2027-01` | Current=`2026-07` | Maintenance=`2026-04` | Deprecated: `2025-10`, `2025-01`, `2024-10` (routed to `2025-04` as of Feb 15, 2026)
+> **Versions:** RC=`2026-10`, `2027-01` | Current=`2026-07` | Maintenance=`2026-04`, `2026-01`, `2025-10`, `2025-07`, `2025-04` | Deprecated: `2025-01`, `2024-10` (routed to `2025-04` as of Feb 15, 2026)
 >
 > **⚠️ Changed 2026-07-01:** `2026-07` is now the stable Current version and the default when no `API-Version` header is passed. `2026-04` moved to Maintenance — bug fixes only, no new features. All examples below pin `2026-07`.
 >
