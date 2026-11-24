@@ -1,5 +1,7 @@
 # ClawSkills
 
+[![Shanksg/clawskills MCP server](https://glama.ai/mcp/servers/Shanksg/clawskills/badges/score.svg)](https://glama.ai/mcp/servers/Shanksg/clawskills)
+
 A library of integration skill documents for the most common SaaS platforms used in go-to-market and operations workflows. Each skill doc teaches an **AI agent, automation builder, or LLM** how to reliably use a platform's API with working code examples, rate limit rules, error playbooks, and platform-specific version details.
 
 ---
